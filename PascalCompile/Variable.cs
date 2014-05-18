@@ -367,7 +367,7 @@ class Record : Variable
     /// <summary>
     /// Возвращает структуру полей
     /// </summary>
-    /// <returns>Массив полей типа Rec</returns>
+    /// <returns>Массив полей типа EnvironsStuct</returns>
     public Environs.EnvironsStuct[] GetFieldsArray()
     {
         return Value;

@@ -40,29 +40,31 @@ class Calculation
             throw new Exception("Количество скобок в выражении \"" + expression + "\" не совпадает");
 
         #region func
-        //Regex func_start = new Regex(@"([A-Za-z0-9_]+)\(");
-        //while (func_start.IsMatch(expression))
-        //{
-        //    string func_name = "";
-        //    int start_pos = func_start.Match(expression).Index;
-        //    while (expression[start_pos] != '(')
-        //        func_name += expression[start_pos++];
+        Regex func_start = new Regex(@"([A-Za-z0-9_]+)\(");
+        while (func_start.IsMatch(expression))
+        {
+            string func_name = "";
+            int start_pos, func_start_pos = func_start.Match(expression).Index;
+            start_pos = func_start_pos;
+            while (expression[start_pos] != '(')
+                func_name += expression[start_pos++];
 
-        //    start_pos++;
-        //    int bkt_count = 1;
-        //    int end_pos;
-        //    for (end_pos = start_pos; end_pos < expression.Length && bkt_count > 0; end_pos++)
-        //        if (expression[end_pos] == '(')
-        //            bkt_count++;
-        //        else if (expression[end_pos] == ')')
-        //            bkt_count--;
-        //    string sub_expression = expression.Remove(0, start_pos)
-        //        .Remove(end_pos - start_pos - 1);
-        //    Console.WriteLine(func_name);
-        //    Console.WriteLine(sub_expression);
-        //    Console.ReadKey(true);
-        //    //expression = expression.Replace("(" + sub_expression + ")", Calculate(sub_expression).ToString());
-        //}
+            start_pos++;
+            int bkt_count = 1;
+            int end_pos;
+            for (end_pos = start_pos; end_pos < expression.Length && bkt_count > 0; end_pos++)
+                if (expression[end_pos] == '(')
+                    bkt_count++;
+                else if (expression[end_pos] == ')')
+                    bkt_count--;
+            string sub_expression = expression.Remove(0, start_pos)
+                .Remove(end_pos - start_pos - 1);
+            //string func = expression.Remove(0, func_start_pos);
+            //if (func.Length > end_pos - func_start_pos)
+            //    func = func.Remove(end_pos - func_start_pos);
+            expression = expression.Remove(func_start_pos, end_pos - func_start_pos)
+                .Insert(func_start_pos, CalcFunc(func_name, sub_expression).ToString());
+        }
         #endregion
 
         while (expression.IndexOf("(") > -1)
@@ -318,12 +320,73 @@ class Calculation
         
         Variable v = environment.GetElementByName(operand);
 
-        //Console.WriteLine(operand);
-        //v.Dump();
-
         if (v.GetType().Name != "NullVariable")
             return v.value.ToString();
 
         return operand;
+    }
+
+    private string CalcFunc(string func_name, string _param)
+    {
+        object param = Calculate(_param);
+        if (param.GetType().Name != "Double")
+            throw new Exception("Функция " + func_name + " не принимает параметр типа " + param.GetType().Name);
+
+        switch (func_name)
+        {
+            case "sign":
+                return Math.Sign((double)param).ToString();
+            case "abs":
+                return Math.Abs((double)param).ToString();
+            case "sin":
+                return Math.Sin((double)param).ToString();
+            case "sinh":
+                return Math.Sinh((double)param).ToString();
+            case "cos":
+                return Math.Cos((double)param).ToString();
+            case "cosh":
+                return Math.Cosh((double)param).ToString();
+            case "tan":
+                return Math.Tan((double)param).ToString();
+            case "tanh":
+                return Math.Tanh((double)param).ToString();
+            case "arcsin":
+                return Math.Acos((double)param).ToString();
+            case "arccos":
+                return Math.Asin((double)param).ToString();
+            case "arctan":
+                return Math.Atan((double)param).ToString();
+            case "exp":
+                return Math.Exp((double)param).ToString();
+            case "ln":
+                return Math.Log((double)param, Math.E).ToString();
+            case "log2":
+                return Math.Log((double)param, 2).ToString();
+            case "log10":
+                return Math.Log10((double)param).ToString();
+            case "sqrt":
+                return Math.Sqrt((double)param).ToString();
+            case "sqr":
+                return ((double)param * (double)param).ToString();
+            case "round":
+                return Math.Round((double)param).ToString();
+            case "trunc":
+            case "int":
+                return Math.Truncate((double)param).ToString();
+            case "frac":
+                return ((double)param - Math.Truncate((double)param)).ToString();
+            case "floor":
+                return Math.Floor((double)param).ToString();
+            case "ceil":
+                return Math.Ceiling((double)param).ToString();
+            case "radtodeg":
+                return ((double)param / Math.PI * 180).ToString();
+            case "degtorad":
+                return ((double)param / 180 * Math.PI).ToString();
+            case "random":
+                return new Random().Next((int)param).ToString();
+            default:
+                throw new Exception("Неизвестная функция " + func_name);
+        }
     }
 }

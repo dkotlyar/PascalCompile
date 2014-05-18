@@ -694,7 +694,7 @@ class ParseCode
         }
         else if ((m = Regexs.Match(command_line, Regs.Expr)).Success)
         {
-            env.Assignment(m.Groups["var"].Value, m.Groups["expr"].Value);
+            env.AssignmentExpr(m.Groups["var"].Value, m.Groups["expr"].Value);
             //Console.WriteLine("{0} := {1}; // Присвоить значение выражения",
             //    m.Groups["var"],
             //    m.Groups["expr"]);
@@ -720,48 +720,48 @@ class ParseCode
         return;
 
 
-        Console.WriteLine(command_line);
-        if (command_line.IndexOf(";") == command_line.Length - 1)
-            command_line = command_line.Remove(command_line.Length - 1);
-        else if (command_line.IndexOf(";") > -1)
-            throw new Exception("Встретился операнд конца строки внутри операции");
+        //Console.WriteLine(command_line);
+        //if (command_line.IndexOf(";") == command_line.Length - 1)
+        //    command_line = command_line.Remove(command_line.Length - 1);
+        //else if (command_line.IndexOf(";") > -1)
+        //    throw new Exception("Встретился операнд конца строки внутри операции");
 
-        if (command_line.Contains(":=@"))
-        {
-            int r = command_line.IndexOf(":=@");
-            string operand = "";
-            for (int i = 0; i < r; i++)
-                operand += command_line[i];
-            string second_operand = "";
-            for (int i = r + 3; i < command_line.Length; i++)
-                second_operand += command_line[i];
-            env.AssignmentAddr(operand, second_operand);
-        }
-        else if (command_line.Contains(":="))
-        {
-            int r = command_line.IndexOf(":=");
-            string operand = "";
-            for (int i = 0; i < r; i++)
-                operand += command_line[i];
-            string expression = "";
-            for (int i = r + 2; i < command_line.Length; i++)
-                expression += command_line[i];
-            env.Assignment(operand, expression);
-        }
-        else if (command_line.StartsWith("new(") && command_line.EndsWith(")"))
-        {
-            string operand = command_line.Remove(0, 4).Remove(command_line.Length - 5);
-            Variable var = env.GetElementByName(operand);
-            if (var == null)
-                throw new Exception("Используется необъявленная переменная: " + operand);
-            if (!var.pointer)
-                throw new Exception("Операция new не применима к статическим типам");
-            ((Pointer)var).Value = InitVariable(var.type);
-        }
-        else
-        {
-            env.GetElementByName(command_line).Dump();
-        }
+        //if (command_line.Contains(":=@"))
+        //{
+        //    int r = command_line.IndexOf(":=@");
+        //    string operand = "";
+        //    for (int i = 0; i < r; i++)
+        //        operand += command_line[i];
+        //    string second_operand = "";
+        //    for (int i = r + 3; i < command_line.Length; i++)
+        //        second_operand += command_line[i];
+        //    env.AssignmentAddr(operand, second_operand);
+        //}
+        //else if (command_line.Contains(":="))
+        //{
+        //    int r = command_line.IndexOf(":=");
+        //    string operand = "";
+        //    for (int i = 0; i < r; i++)
+        //        operand += command_line[i];
+        //    string expression = "";
+        //    for (int i = r + 2; i < command_line.Length; i++)
+        //        expression += command_line[i];
+        //    env.Assignment(operand, expression);
+        //}
+        //else if (command_line.StartsWith("new(") && command_line.EndsWith(")"))
+        //{
+        //    string operand = command_line.Remove(0, 4).Remove(command_line.Length - 5);
+        //    Variable var = env.GetElementByName(operand);
+        //    if (var == null)
+        //        throw new Exception("Используется необъявленная переменная: " + operand);
+        //    if (!var.pointer)
+        //        throw new Exception("Операция new не применима к статическим типам");
+        //    ((Pointer)var).Value = InitVariable(var.type);
+        //}
+        //else
+        //{
+        //    env.GetElementByName(command_line).Dump();
+        //}
     }
 
     /// <summary>

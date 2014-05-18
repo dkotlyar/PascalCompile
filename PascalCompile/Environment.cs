@@ -81,50 +81,55 @@ class Environs
         return var;
     }
 
+    ///// <summary>
+    ///// Присваивает переменной с именем name значение expression
+    ///// </summary>
+    ///// <param name="name">Имя переменной</param>
+    ///// <param name="expression">Выражение</param>
+    //public void Assignment(string name, string expression)
+    //{
+    //    Variable var = GetElementByName(name);
+    //    if (var == null)
+    //        throw new Exception("Используется необъявленная переменная: " + name);
+
+    //    if (var.pointer)
+    //    {
+    //        Variable try_ = GetElementByName(expression);
+    //        if (try_ != null)
+    //            if (try_.pointer)
+    //            {
+    //                AssignmentLink(name, try_);
+    //                return;
+    //            }
+    //        throw new Exception("Нельзя присвоить указателю значение выражения");
+    //    }
+
+    //    switch (var.GetType().Name)
+    //    {
+    //        case "Integer":
+    //            expression = ExpressionToNumberLine(expression, "Integer");
+    //            ((Integer)var).SetValue(expression);
+    //            break;
+    //        case "Real":
+    //            expression = ExpressionToNumberLine(expression, "Real");
+    //            ((Real)var).SetValue(expression);
+    //            break;
+    //        case "Record":
+    //            Variable right_operand = GetElementByName(expression);
+    //            if (right_operand == null)
+    //                throw new Exception("Нельзя присвоить типу Запись значение выражения");
+    //            ((Record)var).SetValue((Record)right_operand);
+    //            break;
+    //        default:
+    //            throw new Exception("Неизвестный тип переменной " + name);
+    //    }
+    //}
+
     /// <summary>
-    /// Присваивает переменной с именем name значение expression
+    /// Присваивает переменной значение операнда
     /// </summary>
-    /// <param name="name">Имя переменной</param>
-    /// <param name="expression">Выражение</param>
-    public void Assignment(string name, string expression)
-    {
-        Variable var = GetElementByName(name);
-        if (var == null)
-            throw new Exception("Используется необъявленная переменная: " + name);
-
-        if (var.pointer)
-        {
-            Variable try_ = GetElementByName(expression);
-            if (try_ != null)
-                if (try_.pointer)
-                {
-                    AssignmentLink(name, try_);
-                    return;
-                }
-            throw new Exception("Нельзя присвоить указателю значение выражения");
-        }
-
-        switch (var.GetType().Name)
-        {
-            case "Integer":
-                expression = ExpressionToNumberLine(expression, "Integer");
-                ((Integer)var).SetValue(expression);
-                break;
-            case "Real":
-                expression = ExpressionToNumberLine(expression, "Real");
-                ((Real)var).SetValue(expression);
-                break;
-            case "Record":
-                Variable right_operand = GetElementByName(expression);
-                if (right_operand == null)
-                    throw new Exception("Нельзя присвоить типу Запись значение выражения");
-                ((Record)var).SetValue((Record)right_operand);
-                break;
-            default:
-                throw new Exception("Неизвестный тип переменной " + name);
-        }
-    }
-
+    /// <param name="var_name">Переменная</param>
+    /// <param name="operand_name">Операнд</param>
     public void AssignmentVar(string var_name, string operand_name)
     {
         Variable var = GetElementByName(var_name);
@@ -134,7 +139,45 @@ class Environs
             throw new Exception("Нельзя присвоить переменной с типом " + var.GetType().Name 
                 + " значение переменной с типом " + operand.GetType().Name);
         if (var.pointer)
-            AssignmentLink(var_name, operand_name);
+            if (operand.pointer)
+                AssignmentLink(var_name, operand);
+            else
+                throw new Exception("Нельзя присвоить значение переменной указателю");
+        else
+            if (var.GetType().Name == "Record")
+                ((Record)var).SetValue((Record)operand);
+            else
+                var.value = operand.value;
+    }
+
+    /// <summary>
+    /// Присваивает переменной значение выражения
+    /// </summary>
+    /// <param name="var_name">Имя переменной</param>
+    /// <param name="expression">Выражение</param>
+    public void AssignmentExpr(string var_name, string expression)
+    {
+        object result = Calculate(expression);
+        Variable var = GetElementByName(var_name);
+
+        if (result.GetType().Name == "Boolean" && var.GetType().Name == "Boolean")
+            var.value = result;
+        else if (result.GetType().Name == "Double")
+        {
+            if (var.GetType().Name == "Integer")
+            {
+                if ((int)(double)result == (double)result)
+                    var.value = (int)(double)result;
+                else
+                    throw new Exception("Нельзя присвоить целочисленной переменной вещественное значение");
+            }
+            else if (var.GetType().Name == "Real")
+                var.value = result;
+            else
+                throw new Exception("Нельзя присвоить переменной типа " + var.type + " значение типа " + result.GetType().Name);
+        }
+        else
+            throw new Exception("Нельзя присвоить переменной типа " + var.type + " значение типа " + result.GetType().Name);
     }
 
     /// <summary>
@@ -212,6 +255,11 @@ class Environs
                 if (var.GetType().Name == "Record")
                     ((Record)var).SetVariable(operand, names[names.Length - 1]);
         }
+    }
+
+    public void AssignmentFunc(string var_name, string func_text)
+    {
+
     }
 
     ///// <summary>
