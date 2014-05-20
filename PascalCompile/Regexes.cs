@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 
 public enum Regs { Program, Const, Type, Var, Function, Procedure, Record, CommentStart, Comment, CommentsStart, Comments, 
-    Begin, End, EndProgram, Operation, EndElse, For, If, Else, Addr, Func, Proc, Expr, AssignVar};
+    Begin, End, EndProgram, Operation, EndElse, For, If, Else, Addr, Func, Proc, Expr, AssignVar, IsString};
 public class Regexs
 {
     private static string pattern_var_name = @"[a-z]+[\w_.^]*";
@@ -36,7 +36,9 @@ public class Regexs
         new Regex("^" + pattern_left_assign + @"(?:[\s]*)(?<func>" + pattern_var_name + @")\((?<param>.*)\)([\s]*);{0,1}$", RegexOptions.Multiline | RegexOptions.IgnoreCase),
         new Regex(@"^(?:[\s]*)(?<proc>" + pattern_var_name + @")\((?<param>.*)\)([\s]*);{0,1}$", RegexOptions.Multiline | RegexOptions.IgnoreCase),
         new Regex("^" + pattern_left_assign + @"(?<expr>[^;@]+);{0,1}$", RegexOptions.Multiline | RegexOptions.IgnoreCase),
-        new Regex("^" + pattern_left_assign + @"(?:[\s]*)(?<operand>" + pattern_var_name + @")(?:[\s]*);{0,1}$", RegexOptions.IgnoreCase)
+        new Regex("^" + pattern_left_assign + @"(?:[\s]*)(?<operand>" + pattern_var_name + @")(?:[\s]*);{0,1}$", RegexOptions.IgnoreCase),
+
+        new Regex("^'(?<str>[^']*)'$", RegexOptions.Multiline | RegexOptions.IgnoreCase)
     };
 
     public static Match Match(string input, Regs regex)

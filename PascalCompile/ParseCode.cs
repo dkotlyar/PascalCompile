@@ -50,15 +50,40 @@ public class ParseCode
 
         CheckConflictNames();
 
-        program.program_tree.Dump();
-
         cursor = GetElementCursor(program.program_tree, "begin");
         if (cursor.HasChild())
             cursor = cursor.GetFirstChild();
         else
             cursor = null;
 
+        InitConstant();
         InitVariable();
+    }
+
+    /// <summary>
+    /// Инициализация констант
+    /// </summary>
+    private void InitConstant()
+    {
+        foreach (TypeStruct ts in program.consts)
+        {
+            Match m;
+            Constant constant = null;
+            object _expr_value = null;
+            if ((m = Regexs.Match(ts.type, Regs.IsString)).Success)
+            {
+                constant = new Constant(ts.name, m.Groups["str"].Value);
+            }
+            else if (env.TryCalculate(ts.type, out _expr_value) && _expr_value != null)
+            {
+                constant = new Constant(ts.name, _expr_value);
+            }
+
+            if (constant == null)
+                throw new Exception("Неизвестное значение константы " + ts.name);
+
+            env.Add(constant, ts.name);
+        }
     }
 
     /// <summary>
@@ -105,7 +130,7 @@ public class ParseCode
             type = type.Remove(0, 1);
             Pointer p = new Pointer(name, type);
             if (name != "")
-                env.Add(p);
+                env.Add(p, name);
             return p;
         }
         else
@@ -128,28 +153,28 @@ public class ParseCode
                     r.SetVariable(v, names[i]);
                 }
                 if (name != "")
-                    env.Add(r);
+                    env.Add(r, name);
                 return r;
             }
             else if (type == "real")
             {
                 Real r = new Real(name);
                 if (name != "")
-                    env.Add(r);
+                    env.Add(r, name);
                 return r;
             }
             else if (type == "integer")
             {
                 Integer i = new Integer(name);
                 if (name != "")
-                    env.Add(i);
+                    env.Add(i, name);
                 return i;
             }
             else
             {
                 Variable v = new Variable(name);
                 if (name != "")
-                    env.Add(v);
+                    env.Add(v, name);
                 return v;
             }
         }
@@ -678,43 +703,20 @@ public class ParseCode
     public void WorkCommand(string command_line)
     {
         Match m;
-        if ((m = Regexs.Match(command_line, Regs.Addr)).Success)
-        {
+        if ((m = Regexs.Match(command_line, Regs.Addr)).Success) // Взятие адреса
             env.AssignmentAddr(m.Groups["var"].Value, m.Groups["operand"].Value);
-            //Console.WriteLine("{0} := @{1}; // Взятие адреса",
-            //    m.Groups["var"],
-            //    m.Groups["operand"]);
-        }
-        else if ((m = Regexs.Match(command_line, Regs.AssignVar)).Success)
-        {
+        else if ((m = Regexs.Match(command_line, Regs.AssignVar)).Success) // Присваивание значение переменной
             env.AssignmentVar(m.Groups["var"].Value, m.Groups["operand"].Value);
-            //Console.WriteLine("{0} := @{1}; // Взятие адреса",
-            //    m.Groups["var"],
-            //    m.Groups["operand"]);
-        }
-        else if ((m = Regexs.Match(command_line, Regs.Expr)).Success)
-        {
+        else if ((m = Regexs.Match(command_line, Regs.Expr)).Success) // Присваивание значение выражения
             env.AssignmentExpr(m.Groups["var"].Value, m.Groups["expr"].Value);
-            //Console.WriteLine("{0} := {1}; // Присвоить значение выражения",
-            //    m.Groups["var"],
-            //    m.Groups["expr"]);
-        }
-        else if ((m = Regexs.Match(command_line, Regs.Func)).Success)
-        {
-            //Console.WriteLine("{0} := {1}({2}); // Присвоить значение функции",
-            //    m.Groups["var"],
-            //    m.Groups["func"],
-            //    m.Groups["param"]);
-        }
-        else if ((m = Regexs.Match(command_line, Regs.Proc)).Success)
-        {
-            //Console.WriteLine("{0}({1}); // Выполнить процедуру",
-            //    m.Groups["proc"],
-            //    m.Groups["param"]);
-        }
+        else if ((m = Regexs.Match(command_line, Regs.Func)).Success) // Присваивание значение функции
+            Function(m.Groups["var"].Value, m.Groups["func"].Value, m.Groups["param"].Value);
+        else if ((m = Regexs.Match(command_line, Regs.Proc)).Success) // Выполнение процедуры
+            Procedure(m.Groups["proc"].Value, m.Groups["param"].Value);
+        else if (command_line == ";") { } // Пустой оператор
         else
         {
-            Console.WriteLine(command_line + " // Нераспознанная команда");
+            throw new Exception("Нераспознанная команда " + command_line + "");
         }
 
         return;
@@ -1001,6 +1003,61 @@ public class ParseCode
                         throw new Exception("Конфликт имён. Нельзя переопределить имя константы/типа/переменной.");
                 names[i + delta] = n.Trim();
             }
+        }
+    }
+
+    /// <summary>
+    /// Выполняет переданную функцию с параметрами и помещает результат в переменную с именем var_name
+    /// </summary>
+    /// <param name="var_name">Имя переменной</param>
+    /// <param name="function_name">Имя функции</param>
+    /// <param name="param">Параметры функции</param>
+    public void Function(string var_name, string function_name, string param)
+    {
+        object _expr_value = null;
+        if (env.TryCalculate(string.Format("{0}({1})", function_name, param), out _expr_value) && _expr_value != null)
+        {
+            env.AssignmentExpr(var_name, _expr_value.ToString());
+            return;
+        }
+
+        switch (function_name)
+        {
+            case "addr":
+                env.AssignmentAddr(var_name, param);
+                return;
+            default:
+                throw new Exception("Неизвестная функция " + function_name);
+        }
+    }
+
+    /// <summary>
+    /// Выполняет переданную процедуру с параметрами
+    /// </summary>
+    /// <param name="procedure_name">Имя функции</param>
+    /// <param name="param">Параметры функции</param>
+    public void Procedure(string procedure_name, string param)
+    {
+        switch (procedure_name)
+        {
+            // Список функций, которые должны игнорироваться и не выдавать исключения при вызове их в качестве процедуры
+            case "addr":
+                return;
+            case "new":
+                Variable var = env.GetElementByName(param);
+                if (var == null)
+                    throw new Exception("Используется необъявленная переменная: " + param);
+                if (!var.pointer)
+                    throw new Exception("Операция new не применима к статическим типам");
+                ((Pointer)var).Value = InitVariable(var.type);
+                return;
+            case "writeln":
+                object result = null;
+                env.TryCalculate(param, out result);
+                Console.WriteLine(result);
+                return;
+            default:
+                throw new Exception("Неизвестная процедура " + procedure_name);
         }
     }
 }
