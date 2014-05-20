@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-class Tree
+public class Tree
 {
     private List<Tree> child { get; set; }
     public Tree parent { get; set; }

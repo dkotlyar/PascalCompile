@@ -3,10 +3,15 @@ using System.Collections.Generic;
 
 public class Variable : ICloneable
 {
-    public string name { get; set; }
+    protected string name { get; set; }
     public object value { get; set; }
     public string type { get; set; }
     public bool pointer { get; set; }
+    public int x { get; set; }
+    public int y { get; set; }
+    //public int  { get; set; }
+    //public int x { get; set; }
+    //public int x { get; set; }
 
     public Variable() { }
 
@@ -222,6 +227,9 @@ public class Integer : Real
 
 public class Record : Variable
 {
+    /// <summary>
+    /// Массив полей переменной Record
+    /// </summary>
     private Environs.EnvironsStuct[] Value;
 
     /// <summary>
@@ -418,6 +426,9 @@ public class Massiv : Record
 
 public class Pointer : Variable
 {
+    /// <summary>
+    /// Переменная, на которую ссылается указатель
+    /// </summary>
     public Variable Value
     {
         get

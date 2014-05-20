@@ -3,13 +3,26 @@ using System.Collections.Generic;
 
 public class Environs
 {
+    /// <summary>
+    /// Структура переменной, хранит переменную и её реальное имя
+    /// </summary>
     public struct EnvironsStuct
     {
+        /// <summary>
+        /// Хранимая переменная
+        /// </summary>
         public Variable value;
+
+        /// <summary>
+        /// Имя хранимой переменной
+        /// </summary>
         public string name;
     };
 
-    protected List<EnvironsStuct> enviroment;
+    /// <summary>
+    /// Список окружения, хранятся переменные типа EnvironsStruct
+    /// </summary>
+    public List<EnvironsStuct> enviroment;
     private Calculation calc;
 
     public Environs()
@@ -18,14 +31,14 @@ public class Environs
         calc = new Calculation(this);
     }
 
-    /// <summary>
-    /// Добавляет переменную в окружение
-    /// </summary>
-    /// <param name="var">Переменная</param>
-    public void Add(Variable var)
-    {
-        Add(var, var.name);
-    }
+    ///// <summary>
+    ///// Добавляет переменную в окружение
+    ///// </summary>
+    ///// <param name="var">Переменная</param>
+    //public void Add(Variable var)
+    //{
+    //    Add(var, var.name);
+    //}
 
     /// <summary>
     /// Добавляет переменную в окружение
@@ -324,9 +337,34 @@ public class Environs
     //    return ((Real)var).value.ToString();
     //}
 
+    /// <summary>
+    /// Производит математические вычисления над переданной строкой
+    /// </summary>
+    /// <param name="expr">Выражение</param>
+    /// <returns>double или boolean</returns>
     public object Calculate(string expr)
     {
         return calc.Calculate(expr);
+    }
+
+    /// <summary>
+    /// Пытается посчитать выражение и записывает результат в переменную output. Возвращает true при успешном подсчёте и false в случае ошибки
+    /// </summary>
+    /// <param name="expr">Выражение</param>
+    /// <param name="output">Переменная для вывода результата</param>
+    /// <returns>boolean</returns>
+    public bool TryCalculate(string expr, out object output)
+    {
+        output = null;
+        try
+        {
+            output = Calculate(expr);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public void Dump()
@@ -334,7 +372,8 @@ public class Environs
         foreach (EnvironsStuct item in enviroment)
             Console.WriteLine("{0} = {1}({2},{3})[{4}] = {5};",
                 item.name,
-                item.value.name,
+                //item.value.name,
+                "",
                 item.value.GetType().Name,
                 item.value.type,
                 item.value.pointer,
