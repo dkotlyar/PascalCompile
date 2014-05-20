@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 
 public enum Regs { Program, Const, Type, Var, Function, Procedure, Record, CommentStart, Comment, CommentsStart, Comments, 
-    Begin, End, EndProgram, Operation, EndElse, For, If, Else, Addr, Func, Proc, Expr, AssignVar, IsString};
+    Begin, End, EndProgram, Operation, WhiteSpaceOperation, EndElse, For, If, Else, Addr, Func, Proc, Expr, AssignVar, IsString};
 public class Regexs
 {
     private static string pattern_var_name = @"[a-z]+[\w_.^]*";
@@ -26,6 +26,7 @@ public class Regexs
         new Regex(@"\bend\b([;]+)", RegexOptions.Multiline| RegexOptions.IgnoreCase),
         new Regex(@"\bend\b([.]+)", RegexOptions.Multiline | RegexOptions.IgnoreCase),
         new Regex(@"([^;]*);", RegexOptions.Multiline | RegexOptions.IgnoreCase),
+        new Regex(@"^([\s]*);$", RegexOptions.Multiline | RegexOptions.IgnoreCase),
 
         new Regex(@"\bend\b(.*)\belse\b", RegexOptions.Multiline | RegexOptions.IgnoreCase),
         new Regex(@"\bfor\b(?:[\s]*)(?<start>.*)(?:[\s]*)(to|downto)+(?:[\s]*)(?<exit_oper>.*)(?:[\s]*)\bdo\b", RegexOptions.Multiline | RegexOptions.IgnoreCase),

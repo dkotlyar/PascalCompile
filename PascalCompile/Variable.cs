@@ -7,11 +7,6 @@ public class Variable : ICloneable
     public object value { get; set; }
     public string type { get; set; }
     public bool pointer { get; set; }
-    public int x { get; set; }
-    public int y { get; set; }
-    //public int  { get; set; }
-    //public int x { get; set; }
-    //public int x { get; set; }
 
     public Variable() { }
 
@@ -371,23 +366,6 @@ public class Record : Variable
             return 0;
         return Value.Length;
     }
-
-    ///// <summary>
-    ///// Возвращает массив полей
-    ///// </summary>
-    ///// <returns></returns>
-    //public Variable[] GetAllFields()
-    //{
-    //    if (Value == null)
-    //        return new Variable[] { };
-
-    //    Variable[] vars = new Variable[Value.Length];
-    //    int i = 0;
-    //    foreach (Environs.EnvironsStuct field in Value)
-    //        vars[i++] = field.value;
-
-    //    return vars;
-    //}
 
     /// <summary>
     /// Возвращает структуру полей

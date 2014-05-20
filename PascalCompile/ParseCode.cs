@@ -480,7 +480,7 @@ public class ParseCode
             }
             #endregion
 
-            #region Выражения
+            #region Операции
             //match = regex_expr.Match(str_stack);
             if ((match = Regexs.Match(str_stack, Regs.Operation)).Success)
             {
@@ -718,52 +718,6 @@ public class ParseCode
         {
             throw new Exception("Нераспознанная команда " + command_line + "");
         }
-
-        return;
-
-
-        //Console.WriteLine(command_line);
-        //if (command_line.IndexOf(";") == command_line.Length - 1)
-        //    command_line = command_line.Remove(command_line.Length - 1);
-        //else if (command_line.IndexOf(";") > -1)
-        //    throw new Exception("Встретился операнд конца строки внутри операции");
-
-        //if (command_line.Contains(":=@"))
-        //{
-        //    int r = command_line.IndexOf(":=@");
-        //    string operand = "";
-        //    for (int i = 0; i < r; i++)
-        //        operand += command_line[i];
-        //    string second_operand = "";
-        //    for (int i = r + 3; i < command_line.Length; i++)
-        //        second_operand += command_line[i];
-        //    env.AssignmentAddr(operand, second_operand);
-        //}
-        //else if (command_line.Contains(":="))
-        //{
-        //    int r = command_line.IndexOf(":=");
-        //    string operand = "";
-        //    for (int i = 0; i < r; i++)
-        //        operand += command_line[i];
-        //    string expression = "";
-        //    for (int i = r + 2; i < command_line.Length; i++)
-        //        expression += command_line[i];
-        //    env.Assignment(operand, expression);
-        //}
-        //else if (command_line.StartsWith("new(") && command_line.EndsWith(")"))
-        //{
-        //    string operand = command_line.Remove(0, 4).Remove(command_line.Length - 5);
-        //    Variable var = env.GetElementByName(operand);
-        //    if (var == null)
-        //        throw new Exception("Используется необъявленная переменная: " + operand);
-        //    if (!var.pointer)
-        //        throw new Exception("Операция new не применима к статическим типам");
-        //    ((Pointer)var).Value = InitVariable(var.type);
-        //}
-        //else
-        //{
-        //    env.GetElementByName(command_line).Dump();
-        //}
     }
 
     /// <summary>
