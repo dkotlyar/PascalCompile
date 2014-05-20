@@ -28,9 +28,15 @@ namespace PascalCompile
                     {
                         Console.ReadKey(true);
                         cursor = pc.DoNextCommand();
+                        if (cursor == null)
+                        {
+                            Console.WriteLine("Программа завершилась.");
+                            continue;
+                        }
+                        Console.WriteLine();
+                        e.Dump();
+                        Console.WriteLine();
                         Console.WriteLine(code.Remove(0, cursor.start).Remove(cursor.end - cursor.start));
-                        //e.Dump();
-                        //Console.ReadKey(true);
                     } while (cursor != null);
                 }
                 catch (Exception e)

@@ -270,11 +270,6 @@ public class Environs
         }
     }
 
-    public void AssignmentFunc(string var_name, string func_text)
-    {
-
-    }
-
     ///// <summary>
     ///// Преобразует выражение к числовой строке
     ///// </summary>
@@ -370,13 +365,9 @@ public class Environs
     public void Dump()
     {
         foreach (EnvironsStuct item in enviroment)
-            Console.WriteLine("{0} = {1}({2},{3})[{4}] = {5};",
+            Console.WriteLine("{0}({1}) = {2};",
                 item.name,
-                //item.value.name,
-                "",
                 item.value.GetType().Name,
-                item.value.type,
-                item.value.pointer,
                 item.value.value);
     }
 }
