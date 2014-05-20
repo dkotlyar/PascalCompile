@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 
-class ParseCode
+public class ParseCode
 {
     /// <summary>
     /// Структура переменных и типов

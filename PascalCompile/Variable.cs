@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-class Variable : ICloneable
+public class Variable : ICloneable
 {
     public string name { get; set; }
     public object value { get; set; }
@@ -36,7 +36,7 @@ class Variable : ICloneable
     }
 }
 
-class NullVariable : Variable
+public class NullVariable : Variable
 {
     public NullVariable()
     {
@@ -46,7 +46,7 @@ class NullVariable : Variable
     }
 }
 
-class Constant : Variable
+public class Constant : Variable
 {
     public object Value
     {
@@ -64,7 +64,7 @@ class Constant : Variable
     }
 }
 
-class Boolean : Variable
+public class Boolean : Variable
 {
     public bool Value
     {
@@ -87,7 +87,7 @@ class Boolean : Variable
     }
 }
 
-class Real : Variable
+public class Real : Variable
 {
     public double Value
     {
@@ -191,7 +191,7 @@ class Real : Variable
     }
 }
 
-class Integer : Real
+public class Integer : Real
 {
     new public int Value
     {
@@ -220,7 +220,7 @@ class Integer : Real
     }
 }
 
-class Record : Variable
+public class Record : Variable
 {
     private Environs.EnvironsStuct[] Value;
 
@@ -263,7 +263,7 @@ class Record : Variable
     /// </summary>
     /// <param name="length">Количество полей в переменной</param>
     /// <returns>True в случае успешного присвоения, False в случае возникновения ошибки</returns>
-    public bool SetLength(int length)
+    private bool SetLength(int length)
     {
         if (Value == null)
         {
@@ -364,17 +364,34 @@ class Record : Variable
         return Value.Length;
     }
 
+    ///// <summary>
+    ///// Возвращает массив полей
+    ///// </summary>
+    ///// <returns></returns>
+    //public Variable[] GetAllFields()
+    //{
+    //    if (Value == null)
+    //        return new Variable[] { };
+
+    //    Variable[] vars = new Variable[Value.Length];
+    //    int i = 0;
+    //    foreach (Environs.EnvironsStuct field in Value)
+    //        vars[i++] = field.value;
+
+    //    return vars;
+    //}
+
     /// <summary>
     /// Возвращает структуру полей
     /// </summary>
     /// <returns>Массив полей типа EnvironsStuct</returns>
-    public Environs.EnvironsStuct[] GetFieldsArray()
+    public Environs.EnvironsStuct[] GetAllFields()
     {
         return Value;
     }
 }
 
-class Massiv : Record
+public class Massiv : Record
 {
     private Environs.EnvironsStuct[] Value;
 
@@ -399,7 +416,7 @@ class Massiv : Record
     }
 }
 
-class Pointer : Variable
+public class Pointer : Variable
 {
     public Variable Value
     {

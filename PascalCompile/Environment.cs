@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-class Environs
+public class Environs
 {
     public struct EnvironsStuct
     {
