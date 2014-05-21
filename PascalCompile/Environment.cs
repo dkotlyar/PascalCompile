@@ -94,6 +94,11 @@ public class Environs
         return var;
     }
 
+    public void DeleteElementByName(string name)
+    {
+
+    }
+
     ///// <summary>
     ///// Присваивает переменной с именем name значение expression
     ///// </summary>

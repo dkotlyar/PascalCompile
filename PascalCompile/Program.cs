@@ -33,9 +33,9 @@ namespace PascalCompile
                             Console.WriteLine("Программа завершилась.");
                             continue;
                         }
-                        Console.WriteLine();
-                        e.Dump();
-                        Console.WriteLine();
+                        //Console.WriteLine();
+                        //e.Dump();
+                        //Console.WriteLine();
                         Console.WriteLine(code.Remove(0, cursor.start).Remove(cursor.end - cursor.start));
                     } while (cursor != null);
                 }

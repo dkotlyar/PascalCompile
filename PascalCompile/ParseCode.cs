@@ -44,6 +44,7 @@ public class ParseCode
         env = new Environs();
         program = new ProgramStruct();
         program.program_tree = GetProgramTree(_code.ToLower());
+        program.program_tree.Dump();
         program.consts = GetTypesStruct(program.program_tree, "const");
         program.types = GetTypesStruct(program.program_tree, "type");
         program.vars = GetTypesStruct(program.program_tree, "var");
@@ -170,6 +171,13 @@ public class ParseCode
                     env.Add(i, name);
                 return i;
             }
+            else if (type == "boolean")
+            {
+                Boolean b = new Boolean(name);
+                if (name != "")
+                    env.Add(b, name);
+                return b;
+            }
             else
             {
                 Variable v = new Variable(name);
@@ -211,7 +219,7 @@ public class ParseCode
 
             words_count += word.Length;
 
-            str_stack = str_stack.Trim();
+            //str_stack = str_stack.Trim();
             str_stack += word;
 
             Regex new_line = new Regex(@"(\n){1}", RegexOptions.Multiline);
@@ -219,58 +227,30 @@ public class ParseCode
             if (nl_match.Success)
                 line_count++;
 
-            while (!cursor.wait && (cursor.type == "if" || cursor.type == "for"))
+            while (!cursor.wait && (cursor.type == "if" || cursor.type == "for" || cursor.type == "while"))
                 cursor = cursor.parent;
-
-            #region Regex
-            //Regex regex_program = new Regex(@"\bprogram\b", RegexOptions.Multiline);
-            //Regex regex_const = new Regex(@"\bconst\b", RegexOptions.Multiline);
-            //Regex regex_type = new Regex(@"\btype\b", RegexOptions.Multiline);
-            //Regex regex_var = new Regex(@"\bvar\b", RegexOptions.Multiline);
-            //Regex regex_function = new Regex(@"\bfunction\b(.*)\(([^\)]*)\)(.*):(.*)([^;]*);", RegexOptions.Multiline);
-            //Regex regex_procedure = new Regex(@"\bprocedure\b(.*)\(([^\)]*)\)([^;]*);", RegexOptions.Multiline);
-            //Regex regex_record = new Regex(@"(.*)\brecord\b", RegexOptions.Multiline);
-
-            //Regex regex_comment_start = new Regex(@"//([^\n]*)", RegexOptions.Multiline);
-            //Regex regex_comment = new Regex(@"//([^\n]*)\n{1,}", RegexOptions.Multiline);
-
-            //Regex regex_comments_start = new Regex(@"{+([^}]*)", RegexOptions.Multiline);
-            //Regex regex_comments = new Regex(@"{[^}]*}", RegexOptions.Multiline);
-
-            //Regex regex_begin = new Regex(@"\bbegin\b", RegexOptions.Multiline);
-            //Regex regex_end = new Regex(@"\bend\b([;]+)", RegexOptions.Multiline);
-            //Regex regex_end_program = new Regex(@"\bend\b([.]+)", RegexOptions.Multiline);
-            //Regex regex_expr = new Regex(@"([^;]*);", RegexOptions.Multiline);
-
-            //Regex regex_end_else = new Regex(@"\bend\b(.*)\belse\b", RegexOptions.Multiline);
-            //Regex regex_for = new Regex(@"\bfor\b(.*)(to|downto)+(.*)\bdo\b", RegexOptions.Multiline);
-            //Regex regex_if = new Regex(@"\bif\b(.*)\bthen\b", RegexOptions.Multiline);
-            //Regex regex_else = new Regex(@"((.*?)(?=else))", RegexOptions.Multiline);
-            #endregion
 
             Match match;
 
             #region Вырезаем комментарии
-            //match = regex_comments.Match(str_stack);
             if ((match = Regexs.Match(str_stack, Regs.Comments)).Success)
             {
                 str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
+                is_wait = true;
                 continue;
             }
-            //match = regex_comments_start.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.CommentsStart)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.CommentsStart)).Success)
             {
                 is_wait = true;
                 continue;
             }
-            //match = regex_comment.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.Comment)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.Comment)).Success)
             {
                 str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
+                is_wait = true;
                 continue;
             }
-            //match = regex_comment_start.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.CommentStart)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.CommentStart)).Success)
             {
                 is_wait = true;
                 continue;
@@ -279,9 +259,10 @@ public class ParseCode
 
             #region Корень программы, блоки функций и операторов не обрабатываются
             #region PROGRAM
-            //match = regex_program.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.CommentStart)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.Program)).Success)
             {
+                if (is_func)
+                    throw new Exception("Блок program не может находиться внутри исполняемого блока программы");
                 while (!cursor.is_root)
                     cursor = cursor.parent;
                 str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
@@ -294,9 +275,10 @@ public class ParseCode
             #endregion
 
             #region CONST
-            //match = regex_const.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.Const)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.Const)).Success)
             {
+                if (is_func)
+                    throw new Exception("Блок const не может находиться внутри исполняемого блока программы");
                 while (!cursor.is_root)
                     cursor = cursor.parent;
                 str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
@@ -308,9 +290,10 @@ public class ParseCode
             #endregion
 
             #region TYPE
-            //match = regex_type.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.Type)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.Type)).Success)
             {
+                if (is_func)
+                    throw new Exception("Блок type не может находиться внутри исполняемого блока программы");
                 while (!cursor.is_root)
                     cursor = cursor.parent;
                 str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
@@ -322,9 +305,10 @@ public class ParseCode
             #endregion
 
             #region VAR
-            //match = regex_var.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.Var)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.Var)).Success)
             {
+                if (is_func)
+                    throw new Exception("Блок var не может находиться внутри исполняемого блока программы");
                 while (!cursor.is_root)
                     cursor = cursor.parent;
                 str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
@@ -336,9 +320,10 @@ public class ParseCode
             #endregion
 
             #region FUNCTION
-            //match = regex_function.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.Function)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.Function)).Success)
             {
+                if (is_func)
+                    throw new Exception("Блок function не может находиться внутри исполняемого блока программы");
                 while (!cursor.is_root)
                     cursor = cursor.parent;
                 str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
@@ -352,8 +337,10 @@ public class ParseCode
             #endregion
 
             #region PROCEDURE
-            if ((match = Regexs.Match(str_stack, Regs.Procedure)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.Procedure)).Success)
             {
+                if (is_func)
+                    throw new Exception("Блок procedure не может находиться внутри исполняемого блока программы");
                 while (!cursor.is_root)
                     cursor = cursor.parent;
                 str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
@@ -367,7 +354,7 @@ public class ParseCode
             #endregion
 
             #region RECORD
-            if ((match = Regexs.Match(str_stack, Regs.Record)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.Record)).Success)
             {
                 str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
                 cursor.AppendChild(new Tree(match.Value, words_count - match.Value.TrimStart().Length, words_count, line_count));
@@ -378,11 +365,12 @@ public class ParseCode
             #endregion
             #endregion
 
-            #region Код программы, обработка функций и операторов
+            #region Код программы, обработка операторов
             #region IF
-            //match = regex_if.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.If)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.If)).Success)
             {
+                if (!is_func)
+                    throw new Exception("Блок if не может находиться вне исполняемого блока программы");
                 str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
                 cursor.AppendChild(new Tree(match.Value, words_count - match.Value.TrimStart().Length, words_count, line_count));
                 cursor = cursor.GetLastChild();
@@ -394,9 +382,10 @@ public class ParseCode
             #endregion
 
             #region END + ELSE
-            //match = regex_end_else.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.EndElse)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.EndElse)).Success)
             {
+                if (!is_func)
+                    throw new Exception("Блок else не может находиться вне исполняемого блока программы");
                 str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
                 cursor = cursor.parent;
                 cursor.wait = true;
@@ -405,9 +394,10 @@ public class ParseCode
             #endregion
 
             #region ELSE
-            //match = regex_else.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.Else)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.Else)).Success)
             {
+                if (!is_func)
+                    throw new Exception("Блок else не может находиться вне исполняемого блока программы");
                 if (cursor.type != "if")
                     throw new Exception("Потерян блок if для конструкции else");
                 if (!string.IsNullOrWhiteSpace(match.Value))
@@ -421,21 +411,35 @@ public class ParseCode
             #endregion
 
             #region FOR
-            //match = regex_for.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.For)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.For)).Success)
             {
+                if (!is_func)
+                    throw new Exception("Блок for не может находиться вне исполняемого блока программы");
                 str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
                 cursor.AppendChild(new Tree(match.Value, words_count - match.Value.TrimStart().Length, words_count, line_count));
-                cursor = cursor.GetLastChild(); // встал на дерево, вершиной которого является for
+                cursor = cursor.GetLastChild();
                 cursor.type = "for";
                 continue;
             }
             #endregion
+
+            #region WHILE
+            else if ((match = Regexs.Match(str_stack, Regs.While)).Success)
+            {
+                if (!is_func)
+                    throw new Exception("Блок while не может находиться вне исполняемого блока программы");
+                str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
+                cursor.AppendChild(new Tree(match.Value, words_count - match.Value.TrimStart().Length, words_count, line_count));
+                cursor = cursor.GetLastChild();
+                cursor.type = "while";
+                continue;
+            }
+            #endregion
+
             #endregion
 
             #region BEGIN
-            //match = regex_begin.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.Begin)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.Begin)).Success)
             {
                 while (!cursor.is_root && !is_func)
                     cursor = cursor.parent;
@@ -457,7 +461,6 @@ public class ParseCode
             #endregion
 
             #region END
-            //match = regex_end_program.Match(str_stack);
             if ((match = Regexs.Match(str_stack, Regs.EndProgram)).Success)
             {
                 if (cursor.is_root)
@@ -468,9 +471,7 @@ public class ParseCode
                 cursor = root_program;
                 break;
             }
-            //match = regex_end.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.End)).Success)
-            if (match.Success)
+            else if ((match = Regexs.Match(str_stack, Regs.End)).Success)
             {
                 if (cursor.is_root)
                     is_func = false;
@@ -481,8 +482,7 @@ public class ParseCode
             #endregion
 
             #region Операции
-            //match = regex_expr.Match(str_stack);
-            if ((match = Regexs.Match(str_stack, Regs.Operation)).Success)
+            else if ((match = Regexs.Match(str_stack, Regs.Operation)).Success)
             {
                 str_stack = str_stack.Remove(str_stack.IndexOf(match.Value), match.Value.Length);
                 cursor.AppendChild(new Tree(match.Value, words_count - match.Value.TrimStart().Length, words_count, line_count));
@@ -674,6 +674,17 @@ public class ParseCode
             else
                 cursor = FindNextCursor(current);
         }
+        else if (current.type == "while")
+        {
+            if (!current.HasChild())
+                throw new Exception("Оператор WHILE не имеет потомков");
+            bool result = GetWhileResult(current.command);
+            Console.WriteLine(result);
+            if (result)
+                cursor = FindChildCursor(current);
+            else
+                cursor = FindNextCursor(current);
+        }
         else if (current.type == "if"/* && current.enters_count == 0*/)
         {
             if (!current.HasChild())
@@ -808,6 +819,25 @@ public class ParseCode
     {
         Match m;
         if ((m = Regexs.Match(command_line, Regs.If)).Success)
+        {
+            object result = env.Calculate(m.Groups["expr"].Value);
+            if (result.GetType().Name == "Boolean")
+                return (bool)result;
+            return false;
+        }
+        else
+            return false;
+    }
+
+    /// <summary>
+    /// Получает результат выполнения выражения, переданного оператор цикла WHILE
+    /// </summary>
+    /// <param name="command_line">Строка оператора цикла WHILE</param>
+    /// <returns>Логическое значение</returns>
+    public bool GetWhileResult(string command_line)
+    {
+        Match m;
+        if ((m = Regexs.Match(command_line, Regs.While)).Success)
         {
             object result = env.Calculate(m.Groups["expr"].Value);
             if (result.GetType().Name == "Boolean")
@@ -992,18 +1022,22 @@ public class ParseCode
     /// <param name="param">Параметры функции</param>
     public void Procedure(string procedure_name, string param)
     {
+        Variable var;
         switch (procedure_name)
         {
             // Список функций, которые должны игнорироваться и не выдавать исключения при вызове их в качестве процедуры
             case "addr":
                 return;
             case "new":
-                Variable var = env.GetElementByName(param);
+                var = env.GetElementByName(param);
                 if (var == null)
                     throw new Exception("Используется необъявленная переменная: " + param);
                 if (!var.pointer)
                     throw new Exception("Операция new не применима к статическим типам");
                 ((Pointer)var).Value = InitVariable(var.type);
+                return;
+            case "dispose":
+                env.DeleteElementByName(param);
                 return;
             case "writeln":
                 object result = null;

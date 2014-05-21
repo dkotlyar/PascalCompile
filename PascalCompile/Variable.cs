@@ -109,86 +109,86 @@ public class Real : Variable
         pointer = false;
     }
 
-    public void SetValue(string expression)
-    {
-        if (pointer)
-            throw new Exception("Нельзя присвоить ссылке числовое значение");
-        else
-            value = (double)Calculate(expression);
-    }
+    //public void SetValue(string expression)
+    //{
+    //    if (pointer)
+    //        throw new Exception("Нельзя присвоить ссылке числовое значение");
+    //    else
+    //        value = (double)Calculate(expression);
+    //}
 
-    public static double Calculate(string expression)
-    {
-        int open_bkt = expression.Split('(').Length - 1;
-        int close_bkt = expression.Split(')').Length - 1;
-        if (open_bkt != close_bkt)
-            throw new Exception("Количество скобок в выражении \"" + expression + "\" не совпадает");
+    //public static double Calculate(string expression)
+    //{
+    //    int open_bkt = expression.Split('(').Length - 1;
+    //    int close_bkt = expression.Split(')').Length - 1;
+    //    if (open_bkt != close_bkt)
+    //        throw new Exception("Количество скобок в выражении \"" + expression + "\" не совпадает");
 
-        expression = expression.Replace(".", ",");
-        expression = expression.Replace("-", "+-");
-        expression = expression.Replace(" ", "");
+    //    expression = expression.Replace(".", ",");
+    //    expression = expression.Replace("-", "+-");
+    //    expression = expression.Replace(" ", "");
 
-        while (expression.IndexOf("--") > -1)
-            expression = expression.Replace("--", "+");
-        while (expression.IndexOf("++") > -1)
-            expression = expression.Replace("++", "+");
+    //    while (expression.IndexOf("--") > -1)
+    //        expression = expression.Replace("--", "+");
+    //    while (expression.IndexOf("++") > -1)
+    //        expression = expression.Replace("++", "+");
 
-        if (expression.IndexOf("*/") > -1 || expression.IndexOf("/*") > -1 ||
-            expression.IndexOf("**") > -1 || expression.IndexOf("//") > -1 ||
-            expression.IndexOf("+*") > -1 || expression.IndexOf("*+") > -1 ||
-            expression.IndexOf("+/") > -1 || expression.IndexOf("/+") > -1)
-            throw new Exception("Встретилась неизвестная команда");
+    //    if (expression.IndexOf("*/") > -1 || expression.IndexOf("/*") > -1 ||
+    //        expression.IndexOf("**") > -1 || expression.IndexOf("//") > -1 ||
+    //        expression.IndexOf("+*") > -1 || expression.IndexOf("*+") > -1 ||
+    //        expression.IndexOf("+/") > -1 || expression.IndexOf("/+") > -1)
+    //        throw new Exception("Встретилась неизвестная команда");
 
-        while (expression.IndexOf("(") > -1)
-        {
-            int start_pos = expression.IndexOf("(") +1;
-            int bkt_count = 1;
-            int end_pos;
-            for (end_pos = start_pos; end_pos < expression.Length && bkt_count > 0; end_pos++)
-                if (expression[end_pos] == '(')
-                    bkt_count++;
-                else if (expression[end_pos] == ')')
-                    bkt_count--;
-            string sub_expression = expression.Remove(0, start_pos)
-                .Remove(end_pos - start_pos - 1);
-            expression = expression.Replace("(" + sub_expression + ")", Calculate(sub_expression).ToString());
-        }
+    //    while (expression.IndexOf("(") > -1)
+    //    {
+    //        int start_pos = expression.IndexOf("(") +1;
+    //        int bkt_count = 1;
+    //        int end_pos;
+    //        for (end_pos = start_pos; end_pos < expression.Length && bkt_count > 0; end_pos++)
+    //            if (expression[end_pos] == '(')
+    //                bkt_count++;
+    //            else if (expression[end_pos] == ')')
+    //                bkt_count--;
+    //        string sub_expression = expression.Remove(0, start_pos)
+    //            .Remove(end_pos - start_pos - 1);
+    //        expression = expression.Replace("(" + sub_expression + ")", Calculate(sub_expression).ToString());
+    //    }
 
-        string[] sum = expression.Split(new char[] { '+' }, StringSplitOptions.RemoveEmptyEntries);
+    //    string[] sum = expression.Split(new char[] { '+' }, StringSplitOptions.RemoveEmptyEntries);
 
-        double sum_result = 0;
-        for (int j = 0; j < sum.Length; j++)
-        {
-            string operation = "";
-            for (int i = 0; i < sum[j].Length; i++)
-                if (sum[j][i] == '*' || sum[j][i] == '/')
-                    operation += sum[j][i];
-            string[] operands = sum[j].Split(new char[] { '*', '/' });
-            if (operands.Length == 0)
-                continue;
+    //    double sum_result = 0;
+    //    for (int j = 0; j < sum.Length; j++)
+    //    {
+    //        string operation = "";
+    //        for (int i = 0; i < sum[j].Length; i++)
+    //            if (sum[j][i] == '*' || sum[j][i] == '/')
+    //                operation += sum[j][i];
+    //        string[] operands = sum[j].Split(new char[] { '*', '/' });
+    //        if (operands.Length == 0)
+    //            continue;
 
-            double result;
-            double.TryParse(operands[0], out result);
-            for (int i = 1; i < operands.Length; i++)
-            {
-                double oper = double.Parse(operands[i]);
-                switch (operation[i - 1])
-                {
-                    case '*':
-                        result *= oper;
-                        break;
-                    case '/':
-                        result /= oper;
-                        break;
-                    default:
-                        throw new Exception("Неизвестная операция: " + operation[i - 1]);
-                }
-            }
-            sum_result += result;
-        }
+    //        double result;
+    //        double.TryParse(operands[0], out result);
+    //        for (int i = 1; i < operands.Length; i++)
+    //        {
+    //            double oper = double.Parse(operands[i]);
+    //            switch (operation[i - 1])
+    //            {
+    //                case '*':
+    //                    result *= oper;
+    //                    break;
+    //                case '/':
+    //                    result /= oper;
+    //                    break;
+    //                default:
+    //                    throw new Exception("Неизвестная операция: " + operation[i - 1]);
+    //            }
+    //        }
+    //        sum_result += result;
+    //    }
 
-        return sum_result;
-    }
+    //    return sum_result;
+    //}
 }
 
 public class Integer : Real
@@ -214,10 +214,10 @@ public class Integer : Real
         pointer = false;
     }
 
-    new public void SetValue(string expression)
-    {
-        value = (int)Calculate(expression);
-    }
+    //new public void SetValue(string expression)
+    //{
+    //    value = (int)Calculate(expression);
+    //}
 }
 
 public class Record : Variable

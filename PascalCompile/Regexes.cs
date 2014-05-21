@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 
 public enum Regs { Program, Const, Type, Var, Function, Procedure, Record, CommentStart, Comment, CommentsStart, Comments, 
-    Begin, End, EndProgram, Operation, WhiteSpaceOperation, EndElse, For, If, Else, Addr, Func, Proc, Expr, AssignVar, IsString};
+    Begin, End, EndProgram, Operation, WhiteSpaceOperation, EndElse, For, While, If, Else, Addr, Func, Proc, Expr, AssignVar, IsString};
 public class Regexs
 {
     private static string pattern_var_name = @"[a-z]+[\w_.^]*";
@@ -29,8 +29,9 @@ public class Regexs
         new Regex(@"^([\s]*);$", RegexOptions.Multiline | RegexOptions.IgnoreCase),
 
         new Regex(@"\bend\b(.*)\belse\b", RegexOptions.Multiline | RegexOptions.IgnoreCase),
-        new Regex(@"\bfor\b(?:[\s]*)(?<start>.*)(?:[\s]*)(to|downto)+(?:[\s]*)(?<exit_oper>.*)(?:[\s]*)\bdo\b", RegexOptions.Multiline | RegexOptions.IgnoreCase),
-        new Regex(@"\bif\b(?:[\s]*)(?<expr>.*)(?:[\s]*)\bthen\b", RegexOptions.Multiline | RegexOptions.IgnoreCase),
+        new Regex(@"\bfor\b(?:[\s]+)(?<start>.*)(?:[\s]+)(to|downto)+(?:[\s]+)(?<exit_oper>.*)(?:[\s]+)\bdo\b", RegexOptions.Multiline | RegexOptions.IgnoreCase),
+        new Regex(@"\bwhile\b(?:[\s]+)(?<expr>.*)(?:[\s]+)\bdo\b", RegexOptions.Multiline | RegexOptions.IgnoreCase),
+        new Regex(@"\bif\b(?:[\s]+)(?<expr>.*)(?:[\s]+)\bthen\b", RegexOptions.Multiline | RegexOptions.IgnoreCase),
         new Regex(@"((.*?)(?=else))", RegexOptions.Multiline | RegexOptions.IgnoreCase),
 
         new Regex("^" + pattern_left_assign + @"(?:[\s]*)\@+(?<operand>" + pattern_var_name + @");{0,1}$", RegexOptions.Multiline | RegexOptions.IgnoreCase),
