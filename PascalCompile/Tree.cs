@@ -29,6 +29,8 @@ public class Tree
     public Tree(string _command)
     {
         child = new List<Tree>();
+        while (_command.Contains("  "))
+            _command = _command.Replace("  ", " ");
         command = _command.Trim();
         wait = true;
         enters_count = 0;
@@ -37,6 +39,8 @@ public class Tree
     public Tree(string _command, int _start, int _end, int _line)
     {
         child = new List<Tree>();
+        while (_command.Contains("  "))
+            _command = _command.Replace("  ", " ");
         command = _command.Trim();
         wait = true;
         start = _start;
@@ -47,9 +51,9 @@ public class Tree
 
     public void Dump(string prefix = "")
     {
-        Console.WriteLine(prefix + command + "(" + start + ";" + (end - start) + ";"+line+")" + (is_root ? "[ROOT]" : ""));
+        Console.WriteLine(prefix + command/* + "(" + start + ";" + (end - start) + ";"+line+")" + (is_root ? "[ROOT]" : "")*/);
         foreach (Tree tree in child)
-            tree.Dump("|  " + prefix);
+            tree.Dump("|   " + prefix);
     }
 
     /// <summary>

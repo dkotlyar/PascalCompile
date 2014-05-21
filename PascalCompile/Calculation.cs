@@ -31,6 +31,7 @@ public class Calculation
     /// <returns>Выражение в формате ОПН</returns>
     private string ToPolsc(string expression)
     {
+        expression = expression.Replace(" ", "");
         int open_bkt = expression.Split('(').Length - 1;
         int close_bkt = expression.Split(')').Length - 1;
         if (open_bkt != close_bkt)
@@ -56,9 +57,6 @@ public class Calculation
                     bkt_count--;
             string sub_expression = expression.Remove(0, start_pos)
                 .Remove(end_pos - start_pos - 1);
-            //string func = expression.Remove(0, func_start_pos);
-            //if (func.Length > end_pos - func_start_pos)
-            //    func = func.Remove(end_pos - func_start_pos);
             expression = expression.Remove(func_start_pos, end_pos - func_start_pos)
                 .Insert(func_start_pos, CalcFunc(func_name, sub_expression).ToString());
         }
@@ -314,7 +312,7 @@ public class Calculation
         double d;
         if (double.TryParse(operand.Replace(".", ","), out d))
             return d.ToString();
-        
+
         Variable v = environment.GetElementByName(operand);
 
         if (v.GetType().Name != "NullVariable")
@@ -381,7 +379,7 @@ public class Calculation
             case "degtorad":
                 return ((double)param / 180 * Math.PI).ToString();
             case "random":
-                return new Random().Next((int)param).ToString();
+                return new Random().Next((int)(double)param).ToString();
             default:
                 throw new Exception("Неизвестная функция " + func_name);
         }
