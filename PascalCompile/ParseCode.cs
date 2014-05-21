@@ -157,6 +157,63 @@ public class ParseCode
                     env.Add(r, name);
                 return r;
             }
+            else if (type.StartsWith("array"))
+            {
+                Match m;
+                if ((m = Regexs.Match(type, Regs.ArrayClassic)).Success)
+                {
+                    object start = null;
+                    if (!env.TryCalculate(m.Groups["from"].Value, out start))
+                        throw new Exception(m.Groups["from"].Value + " не может быть начальным индексом массива");
+                    object end = null;
+                    if (!env.TryCalculate(m.Groups["to"].Value, out end))
+                        throw new Exception(m.Groups["to"].Value + " не может быть конечным индексом массива");
+                    if (start.GetType().Name != end.GetType().Name)
+                        throw new Exception("Тип начального и конечного индекса массива должны совпадать");
+                    if (start == null)
+                        throw new Exception("Индекс массива не распознан, возможно вы использовали недопустимое выражение");
+                    int len = 0;
+                    if (start.GetType().Name == "Double")
+                    {
+                        if ((double)start >= (double)end)
+                            throw new Exception("Начальны индекс не может быть больше или равен конечному");
+                        else if ((int)(double)end != (double)end || (int)(double)start != (double)start)
+                            throw new Exception("Индекс не может быть вещественным числом");
+                        else
+                            len = (int)(double)end - (int)(double)start + 1;
+                    }
+                    else if (start.GetType().Name == "Boolean")
+                    {
+                        if ((bool)start == true || (bool)end == false)
+                            throw new Exception("Начальны индекс не может быть больше или равен конечному");
+                        else
+                               len = 2;
+                    }
+
+                    Massiv mas = new Massiv(name);
+                    string[] names = new string[len];
+                    if (start.GetType().Name == "Boolean")
+                    {
+                        names[0] = "false";
+                        names[1] = "true";
+                    }
+                    else
+                        for (int i = 0; i < len; i++)
+                            names[i] = (i + (int)(double)start).ToString();
+                    mas.SetFields(names);
+                    for (int i = 0; i < len; i++)
+                    {
+                        Variable v = InitVariable("", m.Groups["base_type"].Value);
+                        mas.SetVariable(v, names[i]);
+                    }
+                    mas.type = type;
+                    if (name != "")
+                        env.Add(mas, name);
+                    return mas;
+                }
+                Console.WriteLine("{0} :: {1}", name, type);
+                return new NullVariable();
+            }
             else if (type == "real")
             {
                 Real r = new Real(name);
@@ -607,10 +664,9 @@ public class ParseCode
     /// <returns>Настоящий тип</returns>
     private string GetRealType(string type)
     {
-        string[] replace = new string[] { " ", ":", ",", "^" };
+        string[] replace = new string[] { " ", ":", ",", "^", ";" };
         for (int i = 0; i < replace.Length; i++)
             type = type.Replace(replace[i], "☺" + replace[i] + "☺");
-        type = type.Replace(";", "☺;☺");
         string[] words = type.Split('☺');
         type = "";
         bool replaced = true;
@@ -633,13 +689,16 @@ public class ParseCode
                 type += word.Trim();
         }
 
-        for (int i = 1; i < replace.Length; i++)
-        {
-            while (type.IndexOf(replace[i] + " ") > -1)
-                type = type.Replace(replace[i] + " ", replace[i]);
-            while (type.IndexOf(" " + replace[i]) > -1)
-                type = type.Replace(" " + replace[i], replace[i]);
-        }
+        //Console.WriteLine(type);
+        //Console.ReadKey(true);
+
+        //for (int i = 1; i < replace.Length; i++)
+        //{
+        //    while (type.IndexOf(replace[i] + " ") > -1)
+        //        type = type.Replace(replace[i] + " ", replace[i]);
+        //    while (type.IndexOf(" " + replace[i]) > -1)
+        //        type = type.Replace(" " + replace[i], replace[i]);
+        //}
         while (type.IndexOf("  ") > -1)
             type = type.Replace("  ", " ");
 
@@ -672,18 +731,23 @@ public class ParseCode
             if (result)
                 cursor = FindChildCursor(current);
             else
-                cursor = FindNextCursor(current);
+            {
+                cursor = FindSibling(current);
+                current.enters_count = -1;
+            }
         }
         else if (current.type == "while")
         {
             if (!current.HasChild())
                 throw new Exception("Оператор WHILE не имеет потомков");
             bool result = GetWhileResult(current.command);
-            Console.WriteLine(result);
             if (result)
                 cursor = FindChildCursor(current);
             else
-                cursor = FindNextCursor(current);
+            {
+                cursor = FindSibling(current);
+                current.enters_count = -1;
+            }
         }
         else if (current.type == "if"/* && current.enters_count == 0*/)
         {
@@ -695,7 +759,10 @@ public class ParseCode
             else if (current.GetChildCount() >= 2)
                 cursor = FindChildCursor(current, 1);
             else
-                cursor = FindNextCursor(current);
+            {
+                cursor = FindSibling(current);
+                current.enters_count = -1;
+            }
         }
         else
         {
@@ -890,6 +957,7 @@ public class ParseCode
     /// <returns>Массив переменных</returns>
     private TypeStruct[] GetTypeStructFromField(string var)
     {
+        Console.WriteLine(var);
         TypeStruct[] vars = new TypeStruct[0];
 
         int dp = 0, i = 1, var_declarate = 0;
@@ -917,7 +985,7 @@ public class ParseCode
                 for (int j = 0; j < var_declarate; j++)
                 {
                     vars[vars.Length - var_declarate + j] = new TypeStruct();
-                    vars[vars.Length - var_declarate + j].name = names[j];
+                    vars[vars.Length - var_declarate + j].name = names[j].Trim();
                 }
                 name = "";
             }
@@ -925,7 +993,7 @@ public class ParseCode
             {
                 is_type = false;
                 for (int j = 0; j < var_declarate; j++)
-                    vars[vars.Length - var_declarate + j].type = type;
+                    vars[vars.Length - var_declarate + j].type = type.Trim();
                 type = "";
             }
 

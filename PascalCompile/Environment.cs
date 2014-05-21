@@ -60,7 +60,74 @@ public class Environs
     /// <returns>Переменная</returns>
     public Variable GetElementByName(string name)
     {
-        string[] names = name.Split('.');
+        string[] replace = new string[] { ".", "^", "[", "]" };
+        for (int i = 0; i < replace.Length; i++)
+            name = name.Replace(replace[i], "☺" + replace[i] + "☺");
+        string[] words = name.Split(new char[] { '☺' }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (words.Length == 0)
+            throw new Exception("Нельзя обратиться к пустому имени переменной");
+
+        Variable var = GetElementByBaseName(words[0]);
+
+        int opn_bkt = 0;
+        bool get_field = false;
+        string mas_index = "";
+
+        for (int i = 1; i < words.Length; i++)
+        {
+            if (words[i] == "^")
+            {
+                if (var.GetType().Name == "Pointer")
+                    var = ((Pointer)var).Value;
+                else
+                    throw new Exception("Нельзя применять операцию разыменования к статической переменной");
+            }
+            else if (words[i] == "[" && opn_bkt == 0)
+            {
+                if (var.GetType().Name != "Massiv")
+                    throw new Exception("Нельзя обратиться к переменной типа " + var.GetType().Name + " как к массиву");
+                opn_bkt = 1;
+            }
+            else if (words[i] == "[")
+            {
+                opn_bkt++;
+            }
+            else if (words[i] == "]" && opn_bkt == 1)
+            {
+                opn_bkt = 0;
+                object index = null;
+                if (!TryCalculate(mas_index, out index))
+                    throw new Exception("Нельзя использовать выражение " + mas_index + " в качестве индекс массива");
+                if (var.GetType().Name != "Massiv")
+                    throw new Exception("Для обращения к индексу массива переменная должна быть типа Array");
+                var = ((Massiv)var).GetVariable(index.ToString());
+                mas_index = "";
+            }
+            else if (words[i] == "]")
+            {
+                opn_bkt--;
+            }
+            else if (opn_bkt > 0)
+            {
+                mas_index += words[i];
+            }
+            else if (words[i] == ".")
+            {
+                get_field = true;
+            }
+            else if (get_field)
+            {
+                if (var.GetType().Name != "Record")
+                    throw new Exception("Для обращения к полю переменная должна быть типа Record");
+                var = ((Record)var).GetVariable(words[i]);
+                get_field = false;
+            }
+        }
+
+        return var;
+
+        /*string[] names = name.Split('.');
 
         if (names.Length == 0)
             return new NullVariable();
@@ -91,7 +158,22 @@ public class Environs
                 var = ((Pointer)var).Value;
         }
 
-        return var;
+        return var;*/
+    }
+
+    /// <summary>
+    /// Получает базовую переменную из окружения
+    /// </summary>
+    /// <param name="name">Корневое имя переменной</param>
+    /// <returns></returns>
+    public Variable GetElementByBaseName(string name)
+    {
+        foreach (EnvironsStuct item in enviroment)
+        {
+            if (item.name == name)
+                return item.value;
+        }
+        return new NullVariable();
     }
 
     public void DeleteElementByName(string name)
@@ -370,6 +452,11 @@ public class Environs
     public void Dump()
     {
         foreach (EnvironsStuct item in enviroment)
+            if (item.value.GetType().Name == "Record")
+                ((Record)item.value).Dump();
+            else if (item.value.GetType().Name == "Massiv")
+                ((Massiv)item.value).Dump();
+            else
             Console.WriteLine("{0}({1}) = {2};",
                 item.name,
                 item.value.GetType().Name,

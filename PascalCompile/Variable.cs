@@ -375,6 +375,20 @@ public class Record : Variable
     {
         return Value;
     }
+
+    new public void Dump()
+    {
+        Console.WriteLine("{0}({1},{4})[{2}] = {3};",
+            name,
+            GetType().Name,
+            pointer,
+            value,
+            type);
+        Console.WriteLine("============ Поля ============");
+        foreach (Environs.EnvironsStuct es in Value)
+            es.value.Dump();
+        Console.WriteLine("============ Конец ===========");
+    }
 }
 
 public class Massiv : Record

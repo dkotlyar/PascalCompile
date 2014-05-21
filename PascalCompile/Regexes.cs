@@ -1,10 +1,14 @@
 ﻿using System.Text.RegularExpressions;
 
-public enum Regs { Program, Const, Type, Var, Function, Procedure, Record, CommentStart, Comment, CommentsStart, Comments, 
-    Begin, End, EndProgram, Operation, WhiteSpaceOperation, EndElse, For, While, If, Else, Addr, Func, Proc, Expr, AssignVar, IsString};
+public enum Regs
+{
+    Program, Const, Type, Var, Function, Procedure, Record, ArrayClassic, CommentStart, Comment, CommentsStart, Comments, 
+    Begin, End, EndProgram, Operation, WhiteSpaceOperation, EndElse, For, While, If, Else, Addr, Func, Proc, Expr, AssignVar, IsString
+};
+
 public class Regexs
 {
-    private static string pattern_var_name = @"[a-z]+[\w_.^]*";
+    private static string pattern_var_name = @"[a-z]+[\w_.\^\[\]]*";
     private static string pattern_left_assign = @"(?:[\s]*)(?<var>" + pattern_var_name + @")(?:[\s]*)(?::=){1}";
 
     public static Regex[] Regexes = new Regex[] {
@@ -15,6 +19,8 @@ public class Regexs
         new Regex(@"\bfunction\b(.*)\(([^\)]*)\)(.*):(.*)([^;]*);", RegexOptions.Multiline | RegexOptions.IgnoreCase),
         new Regex(@"\bprocedure\b(.*)\(([^\)]*)\)([^;]*);", RegexOptions.Multiline | RegexOptions.IgnoreCase),
         new Regex(@"(.*)\brecord\b", RegexOptions.Multiline | RegexOptions.IgnoreCase),
+        new Regex(@"\barray\b(?:[\s]*)\[(?:[\s]*)(?<from>[^(\.\.)]*)(?:[\s]*)\.\.(?:[\s]*)(?<to>[^\]]*)(?:[\s]*)\]"+
+            @"(?:[\s]+)\bof\b(?:[\s]+)(?<base_type>.*)(?:[\s]*);{0,1}", RegexOptions.Multiline | RegexOptions.IgnoreCase),
 
         new Regex(@"//([^\n]*)", RegexOptions.Multiline | RegexOptions.IgnoreCase),
         new Regex(@"//([^\n]*)\n{1,}", RegexOptions.Multiline | RegexOptions.IgnoreCase),

@@ -156,10 +156,11 @@ public class Calculation
     /// <returns>Выражение в формате ОПН</returns>
     private string SplitRegexFirst(string expression)
     {
+        if (expression == "")
+            return "0";
+
         string result = "";
         string[] words = new Regex(@"(?:[\s]*(not)[\s]*)").Split(expression);
-        if (words.Length == 0)
-            throw new Exception("Пустое выражение");
 
         if (words.Length == 1)
             return OperandToNormal(expression);
