@@ -14,4 +14,8 @@ Authors:
 
 ABCDEF
 
+<<<<<<< HEAD
 
+=======
+Addd in Branch2
+>>>>>>> origin/Branch2
