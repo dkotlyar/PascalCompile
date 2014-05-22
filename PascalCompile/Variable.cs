@@ -225,7 +225,7 @@ public class Record : Variable
     /// <summary>
     /// Массив полей переменной Record
     /// </summary>
-    private Environs.EnvironsStuct[] Value;
+    public Environs.EnvironsStuct[] Value;
 
     /// <summary>
     /// Создаёт пустую переменную типа Record
@@ -393,8 +393,6 @@ public class Record : Variable
 
 public class Massiv : Record
 {
-    private Environs.EnvironsStuct[] Value;
-
     /// <summary>
     /// Создаёт пустую переменную типа Array
     /// </summary>

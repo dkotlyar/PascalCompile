@@ -209,6 +209,14 @@ public class Calculation
                 else if (double.TryParse(word, out d))
                     stack.Push(d);
                 else
+                //{
+                //    string s = word;
+                //    if (s.StartsWith("'") && s.EndsWith("'"))
+                //        s = s.Remove(0, 1).Remove(s.Length - 2);
+                //    if (s.Contains("'"))
+                //        throw new Exception("Незаконченная строка");
+                //    stack.Push(word.ToString());
+                //}
                     throw new Exception("Неизвестный тип операнда в выражении");
             }
         }
@@ -234,6 +242,8 @@ public class Calculation
             return DoubleCalc((double)y, (double)x, operation);
         else if (x.GetType().Name == "Boolean" && y.GetType().Name == "Boolean")
             return BoolCalc((bool)y, (bool)x, operation);
+        else if (x.GetType().Name == "String" && y.GetType().Name == "String")
+            return StringCalc(y.ToString(), x.ToString(), operation);
         else
             throw new Exception(string.Format("Операция не применима к типам {0} и {1}",
                 x.GetType().Name, y.GetType().Name));
@@ -301,6 +311,11 @@ public class Calculation
             default:
                 throw new Exception(string.Format("Операция {0} не применима к типу Boolean", operation));
         }
+    }
+
+    private object StringCalc(string x, string y, string operation)
+    {
+        return null;
     }
 
     /// <summary>

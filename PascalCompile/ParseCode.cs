@@ -24,8 +24,8 @@ public class ParseCode
         public TypeStruct[] vars;
     }
 
-    ProgramStruct program;
-    Tree cursor;
+    private ProgramStruct program;
+    private Tree cursor;
     private Environs env;
 
     public ParseCode() { }
@@ -62,10 +62,30 @@ public class ParseCode
     }
 
     /// <summary>
+    /// Возвращает текущее окружение
+    /// </summary>
+    /// <returns>Окружение программы</returns>
+    public Environs GetEnviroment()
+    {
+        return env;
+    }
+
+    /// <summary>
+    /// Возвращает курсор на начало программы
+    /// </summary>
+    /// <returns>Курсор</returns>
+    public Tree GetProgramBegin()
+    {
+        return GetElementCursor(program.program_tree, "begin");
+    }
+
+    /// <summary>
     /// Инициализация констант
     /// </summary>
     private void InitConstant()
     {
+        if (program.consts == null)
+            return;
         foreach (TypeStruct ts in program.consts)
         {
             Match m;
@@ -92,6 +112,8 @@ public class ParseCode
     /// </summary>
     private void InitVariable()
     {
+        if (program.vars == null)
+            return;
         foreach (TypeStruct variable in program.vars)
         {
             string[] variables = variable.name.Split(',');
@@ -211,7 +233,6 @@ public class ParseCode
                         env.Add(mas, name);
                     return mas;
                 }
-                Console.WriteLine("{0} :: {1}", name, type);
                 return new NullVariable();
             }
             else if (type == "real")
@@ -250,7 +271,7 @@ public class ParseCode
     /// </summary>
     /// <param name="code">Исходный код</param>
     /// <returns>Дерево программы</returns>
-    static Tree GetProgramTree(string code)
+    private Tree GetProgramTree(string code)
     {
         string[] replace = new string[] { " ", "\r", "\n", "\t" };
         for (int i = 0; i < replace.Length; i++)
@@ -560,7 +581,7 @@ public class ParseCode
     /// <param name="root">Родитель</param>
     /// <param name="command">Команда курсора</param>
     /// <returns>Курсор</returns>
-    static Tree GetElementCursor(Tree root, string command)
+    private Tree GetElementCursor(Tree root, string command)
     {
         if (!root.HasChild())
             return null;
@@ -578,7 +599,7 @@ public class ParseCode
     /// <param name="root">Корневой элемент</param>
     /// <param name="root_name">Имя родителя</param>
     /// <returns></returns>
-    static TypeStruct[] GetTypesStruct(Tree root, string root_name)
+    private TypeStruct[] GetTypesStruct(Tree root, string root_name)
     {
         if (root_name != "type" && root_name != "var" && root_name != "const")
             return null;
@@ -651,6 +672,8 @@ public class ParseCode
     /// <returns>Тип в формате строки</returns>
     private string FindType(string _name)
     {
+        if (program.types == null)
+            return _name;
         foreach (TypeStruct ts in program.types)
             if (ts.name == _name)
                 return ts.type;
@@ -689,16 +712,6 @@ public class ParseCode
                 type += word.Trim();
         }
 
-        //Console.WriteLine(type);
-        //Console.ReadKey(true);
-
-        //for (int i = 1; i < replace.Length; i++)
-        //{
-        //    while (type.IndexOf(replace[i] + " ") > -1)
-        //        type = type.Replace(replace[i] + " ", replace[i]);
-        //    while (type.IndexOf(" " + replace[i]) > -1)
-        //        type = type.Replace(" " + replace[i], replace[i]);
-        //}
         while (type.IndexOf("  ") > -1)
             type = type.Replace("  ", " ");
 
@@ -942,22 +955,12 @@ public class ParseCode
     }
 
     /// <summary>
-    /// Возвращает текущее окружение
-    /// </summary>
-    /// <returns>Окружение программы</returns>
-    public Environs GetEnviroment()
-    {
-        return env;
-    }
-
-    /// <summary>
     /// Разделяет строку на массив переменных, определённых структорой TypeStruct
     /// </summary>
     /// <param name="type">Строка, содержащая код блока VAR</param>
     /// <returns>Массив переменных</returns>
     private TypeStruct[] GetTypeStructFromField(string var)
     {
-        Console.WriteLine(var);
         TypeStruct[] vars = new TypeStruct[0];
 
         int dp = 0, i = 1, var_declarate = 0;
@@ -1090,15 +1093,18 @@ public class ParseCode
     /// <param name="param">Параметры функции</param>
     public void Procedure(string procedure_name, string param)
     {
+        if (param == null) param = "";
+        param = param.Trim();
+
         Variable var;
-        switch (procedure_name)
+        switch (procedure_name.Trim())
         {
             // Список функций, которые должны игнорироваться и не выдавать исключения при вызове их в качестве процедуры
             case "addr":
                 return;
             case "new":
                 var = env.GetElementByName(param);
-                if (var == null)
+                if (var == null || var.GetType().Name == "NullVariable")
                     throw new Exception("Используется необъявленная переменная: " + param);
                 if (!var.pointer)
                     throw new Exception("Операция new не применима к статическим типам");
@@ -1106,6 +1112,28 @@ public class ParseCode
                 return;
             case "dispose":
                 env.DeleteElementByName(param);
+                return;
+            case "inc":
+                var = env.GetElementByName(param);
+                if (var == null || var.GetType().Name == "NullVariable")
+                    throw new Exception("Используется необъявленная переменная: " + param);
+                if (var.GetType().Name == "Real")
+                    ((Real)var).Value++;
+                else if (var.GetType().Name == "Integer")
+                    ((Integer)var).Value++;
+                else 
+                    throw new Exception("Операция inc не применима к нечисловым типам");
+                return;
+            case "dec":
+                var = env.GetElementByName(param);
+                if (var == null || var.GetType().Name == "NullVariable")
+                    throw new Exception("Используется необъявленная переменная: " + param);
+                if (var.GetType().Name == "Real")
+                    ((Real)var).Value--;
+                else if (var.GetType().Name == "Integer")
+                    ((Integer)var).Value--;
+                else
+                    throw new Exception("Операция dec не применима к нечисловым типам");
                 return;
             case "writeln":
                 object result = null;

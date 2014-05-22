@@ -22,7 +22,7 @@ public class Environs
     /// <summary>
     /// Список окружения, хранятся переменные типа EnvironsStruct
     /// </summary>
-    public List<EnvironsStuct> enviroment;
+    private List<EnvironsStuct> enviroment;
     private Calculation calc;
 
     public Environs()
@@ -30,15 +30,6 @@ public class Environs
         enviroment = new List<EnvironsStuct>();
         calc = new Calculation(this);
     }
-
-    ///// <summary>
-    ///// Добавляет переменную в окружение
-    ///// </summary>
-    ///// <param name="var">Переменная</param>
-    //public void Add(Variable var)
-    //{
-    //    Add(var, var.name);
-    //}
 
     /// <summary>
     /// Добавляет переменную в окружение
@@ -181,49 +172,49 @@ public class Environs
 
     }
 
-    ///// <summary>
-    ///// Присваивает переменной с именем name значение expression
-    ///// </summary>
-    ///// <param name="name">Имя переменной</param>
-    ///// <param name="expression">Выражение</param>
-    //public void Assignment(string name, string expression)
-    //{
-    //    Variable var = GetElementByName(name);
-    //    if (var == null)
-    //        throw new Exception("Используется необъявленная переменная: " + name);
+    /// <summary>
+    /// Получает список статических переменных (не являются ссылками и их нельзя удалить)
+    /// </summary>
+    /// <returns></returns>
+    public List<EnvironsStuct> GetStaticVariable()
+    {
+        List<EnvironsStuct> lst = new List<EnvironsStuct>();
+        foreach (EnvironsStuct es in enviroment)
+            if (!es.value.pointer && es.name != "DYNAMIC")
+                lst.Add(es);
+        return lst;
+    }
 
-    //    if (var.pointer)
-    //    {
-    //        Variable try_ = GetElementByName(expression);
-    //        if (try_ != null)
-    //            if (try_.pointer)
-    //            {
-    //                AssignmentLink(name, try_);
-    //                return;
-    //            }
-    //        throw new Exception("Нельзя присвоить указателю значение выражения");
-    //    }
+    /// <summary>
+    /// Получает список указателей, указатель может быть создан динамически
+    /// </summary>
+    /// <returns></returns>
+    public List<EnvironsStuct> GetPointerVariable()
+    {
+        List<EnvironsStuct> lst = new List<EnvironsStuct>();
+        foreach (EnvironsStuct es in enviroment)
+            if (es.value.pointer)
+                lst.Add(es);
+        return lst;
+    }
 
-    //    switch (var.GetType().Name)
-    //    {
-    //        case "Integer":
-    //            expression = ExpressionToNumberLine(expression, "Integer");
-    //            ((Integer)var).SetValue(expression);
-    //            break;
-    //        case "Real":
-    //            expression = ExpressionToNumberLine(expression, "Real");
-    //            ((Real)var).SetValue(expression);
-    //            break;
-    //        case "Record":
-    //            Variable right_operand = GetElementByName(expression);
-    //            if (right_operand == null)
-    //                throw new Exception("Нельзя присвоить типу Запись значение выражения");
-    //            ((Record)var).SetValue((Record)right_operand);
-    //            break;
-    //        default:
-    //            throw new Exception("Неизвестный тип переменной " + name);
-    //    }
-    //}
+    /// <summary>
+    /// Получает список переменных, которые привели к утечке памяти, 
+    /// они не связаны с имененем переменной или указателем (могут быть связаны между собой)
+    /// </summary>
+    /// <returns></returns>
+    public List<EnvironsStuct> GetTrushVariable()
+    {
+        List<EnvironsStuct> lst = new List<EnvironsStuct>();
+        foreach (EnvironsStuct es in enviroment)
+            if (es.name == "DYNAMIC")
+                lst.Add(es);
+        foreach (EnvironsStuct es in GetPointerVariable())
+            for (int i = 0; i < lst.Count; i++)
+                if (lst[i].value == es.value.value)
+                    lst.RemoveAt(i--);
+        return lst;
+    }
 
     /// <summary>
     /// Присваивает переменной значение операнда
@@ -233,6 +224,34 @@ public class Environs
     public void AssignmentVar(string var_name, string operand_name)
     {
         Variable var = GetElementByName(var_name);
+        object result;
+        if (TryCalculate(operand_name, out result) && result != null)
+        {
+            switch (var.GetType().Name)
+            {
+                case "Boolean":
+                    if (result.GetType().Name != "Boolean")
+                        throw new Exception("Нельзя присвоить переменной типа boolean значени типа " + result.GetType().Name);
+                    ((Boolean)var).Value = (bool)result;
+                    return;
+                case "Real":
+                    if (result.GetType().Name != "Double")
+                        throw new Exception("Нельзя присвоить переменной типа real значение типа " + result.GetType().Name);
+                    ((Real)var).Value = (double)result;
+                    return;
+                case "Integer":
+                    if (result.GetType().Name != "Double")
+                        throw new Exception("Нельзя присвоить переменной типа integer значение типа " + result.GetType().Name);
+                    if ((int)(double)result != (double)result)
+                        throw new Exception("Нельзя присвоить переменной типа integer значение типа real");
+                    ((Integer)var).Value = (int)(double)result;
+                    return;
+                default:
+                    throw new Exception("Нельзя присвоить переменной типа " + var.GetType().Name +
+                        " значение типа " + result.GetType().Name);
+            }
+        }
+        
         Variable operand = GetElementByName(operand_name);
 
         if (var.GetType().Name != operand.GetType().Name)
@@ -356,68 +375,6 @@ public class Environs
                     ((Record)var).SetVariable(operand, names[names.Length - 1]);
         }
     }
-
-    ///// <summary>
-    ///// Преобразует выражение к числовой строке
-    ///// </summary>
-    ///// <param name="expression">Исходное выражение</param>
-    ///// <param name="class_name">Формат строки (Integer - целочисленное, Real - Вещественное)</param>
-    ///// <returns>Числовая строка</returns>
-    //private string ExpressionToNumberLine(string expression, string class_name)
-    //{
-    //    string[] operands = expression.Split(new char[] { '+', '-', '*', '/', '(', ')', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-    //    for (int i = 0; i < operands.Length; i++)
-    //        for (int j = 0; j < operands.Length - i; j++)
-    //            if (String.Compare(operands[i], operands[j]) > 0)
-    //            {
-    //                string tmp = operands[i];
-    //                operands[i] = operands[j];
-    //                operands[j] = tmp;
-    //            }
-    //    foreach (string operand in operands)
-    //    {
-    //        Variable var = GetElementByName(operand);
-    //        bool digits = true;
-    //        foreach (char c in operand)
-    //            digits = digits && (char.IsDigit(c) || c == ',' || c == '.' || c == '-');
-
-    //        string value = "";
-    //        if (digits)
-    //            continue;
-    //        if (class_name == "Integer")
-    //            value = GetIntegerValue(operand);
-    //        else if (class_name == "Real")
-    //            value = GetRealValue(operand);
-    //        expression = expression.Replace(operand, value);
-    //    }
-    //    return expression;
-    //}
-
-    ///// <summary>
-    ///// Возвращает целочисленное значение переменной в формате строки
-    ///// </summary>
-    ///// <param name="name">Имя переменной</param>
-    ///// <returns>Целочисленное значение в формате строки</returns>
-    //private string GetIntegerValue(string name)
-    //{
-    //    Variable var = GetElementByName(name);
-    //    if (var == null || var.GetType().Name == "NullVariable")
-    //        throw new Exception("Используется необъявленная переменная: '" + name + "'");
-    //    return ((Integer)var).value.ToString();
-    //}
-
-    ///// <summary>
-    ///// Возвращает вещественное значение переменной в формате строки
-    ///// </summary>
-    ///// <param name="name">Имя переменной</param>
-    ///// <returns>Вещественное значение в формате строки</returns>
-    //private string GetRealValue(string name)
-    //{
-    //    Variable var = GetElementByName(name);
-    //    if (var == null || var.GetType().Name == "NullVariable")
-    //        throw new Exception("Используется необъявленная переменная: '" + name + "'");
-    //    return ((Real)var).value.ToString();
-    //}
 
     /// <summary>
     /// Производит математические вычисления над переданной строкой

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace PascalCompile
@@ -7,6 +8,23 @@ namespace PascalCompile
     {
         static void Main(string[] args)
         {
+            /*try
+            {
+                Environs env = new Environs();
+                object result;
+                result = env.Calculate("'Hello ' + 'wld!'");
+                bool b = env.TryCalculate("'Hello ' + 'world!'", out result);
+                Console.WriteLine(b);
+                Console.WriteLine();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            Console.ReadKey(true);*/
+
+
             /*string name = "rec^.x^[5.3+0.7]^.y";
             Console.WriteLine(name);
 
@@ -92,6 +110,17 @@ namespace PascalCompile
                             Console.WriteLine("Программа завершилась.");
                             continue;
                         }
+
+                        List<Environs.EnvironsStuct> lst = e.GetTrushVariable();
+
+                        foreach (Environs.EnvironsStuct item in lst)
+                        {
+                            Console.WriteLine("{0}({1}) = {2};",
+                                item.name,
+                                item.value.GetType().Name,
+                                item.value.value);
+                        }
+
                         //Console.WriteLine();
                         //e.Dump();
                         //Console.WriteLine();
