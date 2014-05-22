@@ -8,7 +8,6 @@ namespace PascalCompile
     {
         static void Main(string[] args)
         {
-            Console.ReadKey(true);
             /*try
             {
                 Environs env = new Environs();
