@@ -9,3 +9,6 @@ Authors:
 - D. Kotlyar, 
 - A. Andruschenko
 >>>>>>> origin/master
+
+
+ABCDEF
