@@ -1,5 +1,5 @@
 # ======= PASCAL COMPILE (CORE) ===========
 License: LGPL
-Author: D. Kotlyar, A. Andruschenko
-Test write!
-New Test.
+Authors: 
+- D. Kotlyar, 
+- A. Andruschenko
