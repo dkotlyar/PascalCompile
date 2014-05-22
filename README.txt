@@ -2,7 +2,6 @@
 License: LGPL
 <<<<<<< HEAD
 Author: D. Kotlyar, A. Andruschenko
-Language: C#
 Test write!
 est.
 =======
@@ -13,5 +12,3 @@ Authors:
 
 
 ABCDEF
-
-
