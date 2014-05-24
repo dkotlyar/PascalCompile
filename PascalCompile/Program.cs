@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 
 namespace PascalCompile
@@ -8,15 +10,44 @@ namespace PascalCompile
     {
         static void Main(string[] args)
         {
-            Console.ReadKey(true);
-            /*try
+            /*string str = "cos(x)-'hello[;=))'+sin(x-a[10-a[3]]+t[','])+a[10]-b[abs(i)/abs(j)]-t['.']";
+            //str = "5*(2*cos('0*(2+1')+3)<10+a[(((]a[]!=a['(']<>'a[((()]]'";
+            //str = "(str = 'Hello ' + 'world') or length(str) = 0";
+            str = "10+5";
+            //Console.WriteLine(str);
+
+            try
             {
+                Calculation c = new Calculation(new Environs());
+                Queue opn = c.ToPolscQueue(str);
+                //object result = c.CalcPolsc(opn);
+                //Console.WriteLine(result);
+
+                foreach (Object obj in opn)
+                    Console.WriteLine("'{0}' ", ((Calculation.MathStruct)obj).value, ((Calculation.MathStruct)obj).type);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            Console.ReadKey(true);
+
+
+            /*
+            try
+            {
+                string str = "'world'";
                 Environs env = new Environs();
+                env.Add(new Variable(), "x");
+                env.Add(new Variable(), "y");
+                env.GetElementByName("x").value = "Hello ";
+                env.GetElementByName("y").value = " world";
                 object result;
-                result = env.Calculate("'Hello ' + 'wld!'");
-                bool b = env.TryCalculate("'Hello ' + 'world!'", out result);
-                Console.WriteLine(b);
-                Console.WriteLine();
+                //result = env.Calculate(str);
+                bool b = env.TryCalculate("x+y", out result);
+                //Console.WriteLine(b);
+                Console.WriteLine(result);
             }
             catch (Exception e)
             {

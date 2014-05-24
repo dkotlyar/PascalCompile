@@ -7,6 +7,12 @@ public class Calculation
 {
     Environs environment;
 
+    public struct MathStruct
+    {
+        public int type;
+        public object value;
+    }
+
     public Calculation() { }
 
     public Calculation(Environs _environment)
@@ -21,7 +27,267 @@ public class Calculation
     /// <returns>Ответ (число или логическое значеие)</returns>
     public object Calculate(string expression)
     {
-        return CalcPolsc(ToPolsc(expression));
+        //Console.WriteLine("'{0}'", expression);
+        //Queue opn = ToPolscQueue(expression);
+        //foreach (object obj in opn)
+        //    Console.WriteLine("{0} :: {1}", ((MathStruct)obj).value, ((MathStruct)obj).type);
+        ////Console.ReadKey(true);
+        //object result = CalcPolsc(opn);
+        //Console.WriteLine(result);
+        //Console.ReadKey(true);
+        //return CalcPolsc(opn);
+        return CalcPolsc(ToPolscQueue(expression));
+        //return CalcPolsc(ToPolsc(expression));
+    }
+
+    /// <summary>
+    /// Вычисляет обратную польскую нотацию из переданного выражения
+    /// </summary>
+    /// <param name="expression"></param>
+    /// <returns></returns>
+    public Queue ToPolscQueue(string expression)
+    {
+        //Console.WriteLine("'{0}'", expression);
+        Queue operands = new Queue();
+
+        string[] fourh = new string[] { "<>", "<=", ">=", "<", ">", "=" };
+        string[] third = new string[] { "+", "-", "or" };
+        string[] second = new string[] { "*", "/", "and" };
+        string[] first = new string[] { "not" };
+
+        string[] operations = fourh.Concat(third).ToArray()
+                .Concat(second).ToArray()
+                .Concat(first).ToArray();
+
+        //string[] operations = new string[] { " ", "+", "-", "*", "/", "<>", "<=", ">=", "<", ">", "=",
+        //        "and", "or", "not"};
+        char[] splitters = new char[] { ' ', '+', '-', '*', '/', '<', '>', '=', '(', ')' };
+
+        #region разделяем строку на сущности
+        string str_stack = "";
+        bool is_string = false, is_ignore_s = false, is_ignore_r = false, is_func = false;
+        int opn_bkt_s = 0, opn_bkt_r = 0;
+        for (int i = 0; i < expression.Length; i++)
+        {
+            if (!is_string)
+            {
+                #region скобки массива
+                if (expression[i] == '[' && opn_bkt_s == 0)
+                {
+                    is_ignore_s = true;
+                    opn_bkt_s = 1;
+                    str_stack += expression[i];
+                }
+                else if (expression[i] == '[' && is_ignore_s)
+                {
+                    opn_bkt_s++;
+                    str_stack += expression[i];
+                }
+                else if (expression[i] == ']' && opn_bkt_s == 1)
+                {
+                    is_ignore_s = false;
+                    opn_bkt_s = 0;
+                    str_stack += expression[i];
+                    continue;
+                }
+                else if (expression[i] == ']' && is_ignore_s)
+                {
+                    opn_bkt_s--;
+                    str_stack += expression[i];
+                }
+                else if (is_ignore_s && expression[i] != '\'')
+                {
+                    str_stack += expression[i];
+                }
+                #endregion
+                #region скобки функции
+                if (expression[i] == '(' && opn_bkt_r == 0 && str_stack.Length > 0 && char.IsLetter(str_stack[0]))
+                {
+                    is_func = true;
+                    is_ignore_r = true;
+                    opn_bkt_r = 1;
+                    str_stack += expression[i];
+                }
+                else if (expression[i] == '(' && is_ignore_r)
+                {
+                    opn_bkt_r++;
+                    str_stack += expression[i];
+                }
+                else if (expression[i] == ')' && opn_bkt_r == 1)
+                {
+                    is_ignore_r = false;
+                    opn_bkt_r = 0;
+                    str_stack += expression[i];
+                    continue;
+                }
+                else if (expression[i] == ')' && is_ignore_r)
+                {
+                    opn_bkt_r--;
+                    str_stack += expression[i];
+                }
+                else if (is_ignore_r && expression[i] != '\'')
+                {
+                    str_stack += expression[i];
+                }
+                #endregion
+            }
+
+            #region строковое выражение
+            if (expression[i] == '\'')
+            {
+                if (!is_ignore_r && !is_ignore_s)
+                {
+                    MathStruct ms = new MathStruct();
+                    if (is_string)
+                    {
+                        ms.type = 0;
+                        ms.value = str_stack;
+                        operands.Enqueue(ms);
+                    }
+                    else if (str_stack.Trim().Length > 0)
+                    {
+                        str_stack = str_stack.Trim();
+                        ms.value = str_stack;
+                        if (operations.Contains(str_stack))
+                            ms.type = 2;
+                        else
+                            ms.type = 1;
+                        operands.Enqueue(ms);
+                    }
+                    str_stack = "";
+                }
+                else
+                    str_stack += expression[i];
+                is_string = !is_string;
+            }
+            else if (is_string)
+                str_stack += expression[i];
+            #endregion
+            else if (!is_ignore_r && !is_ignore_s)
+            {
+                #region
+                str_stack = str_stack.Trim();
+                if (str_stack.Length == 0)
+                    str_stack += expression[i];
+                else if (operations.Contains(str_stack + expression[i]))
+                {
+                    MathStruct ms = new MathStruct();
+                    ms.type = 2;
+                    ms.value = str_stack + expression[i];
+                    operands.Enqueue(ms);
+                    str_stack = "";
+                }
+                else if (!splitters.Contains(expression[i]) && !splitters.Contains(str_stack[0]))
+                    str_stack += expression[i];
+                else
+                {
+                    MathStruct ms = new MathStruct();
+                    ms.value = str_stack;
+                    if (splitters.Contains(str_stack[0]))
+                        ms.type = 2;
+                    else if (is_func)
+                        ms.type = 3;
+                    else
+                        ms.type = 1;
+                    operands.Enqueue(ms);
+                    str_stack = expression[i].ToString();
+                    is_func = false;
+                }
+                #endregion
+            }
+        }
+        if (str_stack.Trim().Length > 0)
+        {
+            MathStruct ms = new MathStruct();
+            ms.value = str_stack.Trim();
+            if (str_stack.Length == 1 && splitters.Contains(str_stack[0]))
+                ms.type = 2;
+            else
+                ms.type = 1;
+            operands.Enqueue(ms);
+        }
+        #endregion
+
+        //foreach (Object obj in operands)
+        //    Console.WriteLine("'{0}' ", ((Calculation.MathStruct)obj).value, ((Calculation.MathStruct)obj).type);
+
+        #region Записываем ОПН в очередь
+        Queue opn = new Queue();
+        Stack st = new Stack();
+        Stack level_stack = new Stack();
+        foreach (Object obj in operands)
+        {
+            int type = ((MathStruct)obj).type;
+            object value = ((MathStruct)obj).value;
+            if (type == 2)
+            {
+                if (value.ToString() == "(")
+                {
+                    st.Push(value);
+                    level_stack.Push(5);
+                }
+                else if (value.ToString() == ")")
+                {
+
+                    while (st.Count > 0 && st.Peek().ToString() != "(")
+                    {
+                        MathStruct ms = new MathStruct() { type = 2, value = st.Pop() };
+                        opn.Enqueue(ms);
+                        level_stack.Pop();
+                    }
+                    if (st.Count > 0 && st.Peek().ToString() == "(")
+                    {
+                        st.Pop();
+                        level_stack.Pop();
+                    }
+                }
+                else
+                {
+                    int level = 0;
+
+                    if (fourh.Contains(value.ToString()))
+                        level = 4;
+                    else if (third.Contains(value.ToString()))
+                        level = 3;
+                    else if (second.Contains(value.ToString()))
+                        level = 2;
+                    else if (first.Contains(value.ToString()))
+                        level = 1;
+
+                    if (level == 0)
+                        throw new Exception("Не удалось определить уровень операции " + value.ToString());
+
+                    while (level_stack.Count > 0 && (int)level_stack.Peek() <= level && st.Count > 0)
+                    {
+                        MathStruct ms = new MathStruct() { type = 2, value = st.Pop() };
+                        opn.Enqueue(ms);
+                        level_stack.Pop();
+                    }
+
+                    st.Push(value);
+                    level_stack.Push(level);
+                }
+            }
+            else if (type == 3)
+            {
+                MathStruct ms = new MathStruct() { type = 1 };
+                ms.value = CalcFunc(value.ToString());
+                opn.Enqueue(ms);
+            }
+            else
+            {
+                opn.Enqueue(obj);
+            }
+        }
+
+        while (st.Count > 0)
+        {
+            MathStruct ms = new MathStruct() { type = 2, value = st.Pop() };
+            opn.Enqueue(ms);
+        }
+        #endregion
+
+        return opn;
     }
 
     /// <summary>
@@ -180,7 +446,7 @@ public class Calculation
     {
         string[] operands = expression.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
         string[] operations = new string[] { "<>", "<=", "<", ">=", ">", "=", "+", "-",
-                "or", "and", "*", "/", "div", "mod" }; // "not"
+                "or", "and", "*", "/", "div", "mod" };
 
         Stack stack = new Stack();
 
@@ -209,15 +475,83 @@ public class Calculation
                 else if (double.TryParse(word, out d))
                     stack.Push(d);
                 else
-                //{
-                //    string s = word;
-                //    if (s.StartsWith("'") && s.EndsWith("'"))
-                //        s = s.Remove(0, 1).Remove(s.Length - 2);
-                //    if (s.Contains("'"))
-                //        throw new Exception("Незаконченная строка");
-                //    stack.Push(word.ToString());
-                //}
                     throw new Exception("Неизвестный тип операнда в выражении");
+            }
+        }
+
+        if (stack.Count == 1)
+            return stack.Pop();
+        else
+            throw new Exception("Не все операции были выполнены");
+    }
+
+    /// <summary>
+    /// Вычисляет значение вырожения из ОПН
+    /// </summary>
+    /// <param name="expression">Выражение в формате ОПН</param>
+    /// <returns>Результат вычисления, число или логическое значение</returns>
+    public object CalcPolsc(Queue expression)
+    {
+        string[] operations = new string[] { "<>", "<=", "<", ">=", ">", "=", "+", "-",
+                "or", "and", "*", "/", "div", "mod" };
+
+        Stack stack = new Stack();
+
+        foreach (object ms in expression)
+        {
+            MathStruct MS = (MathStruct)ms;
+            if (MS.type == 2 && MS.value.ToString() == "not")
+            {
+                object operand = stack.Pop();
+                if (operand.GetType().Name != "Boolean")
+                    throw new Exception("Операция NOT не применима к типу " + operand.GetType().Name);
+                stack.Push(!(bool)operand);
+            }
+            else if (MS.type == 2)
+            {
+                if (MS.value.ToString() == "-" && stack.Count == 1)
+                {
+                    object temp = stack.Pop();
+                    stack.Push(0.0);
+                    stack.Push(temp);
+                }
+                object result = SimpleCalc(stack.Pop(), stack.Pop(), MS.value.ToString());
+                stack.Push(result);
+            }
+            else if (MS.type == 1)
+            {
+
+                double d;
+                bool b;
+                if (double.TryParse(MS.value.ToString().Replace(".", ","), out d))
+                {
+                    stack.Push(d);
+                }
+                else if (bool.TryParse(MS.value.ToString(), out b))
+                {
+                    stack.Push(b);
+                }
+                else
+                {
+                    Variable v = environment.GetElementByName(MS.value.ToString());
+
+                    if (v.GetType().Name != "NullVariable")
+                        MS.value = v.value;
+                    if (double.TryParse(MS.value.ToString().Replace(".", ","), out d))
+                    {
+                        stack.Push(d);
+                    }
+                    else if (bool.TryParse(MS.value.ToString(), out b))
+                    {
+                        stack.Push(b);
+                    }
+                    else
+                        throw new Exception("Неизвестная переменная " + MS.value.ToString());
+                }
+            }
+            else
+            {
+                stack.Push(MS.value.ToString());
             }
         }
 
@@ -242,7 +576,7 @@ public class Calculation
             return DoubleCalc((double)y, (double)x, operation);
         else if (x.GetType().Name == "Boolean" && y.GetType().Name == "Boolean")
             return BoolCalc((bool)y, (bool)x, operation);
-        else if (x.GetType().Name == "String" && y.GetType().Name == "String")
+        else if (x.GetType().Name == "String" || y.GetType().Name == "String")
             return StringCalc(y.ToString(), x.ToString(), operation);
         else
             throw new Exception(string.Format("Операция не применима к типам {0} и {1}",
@@ -313,9 +647,34 @@ public class Calculation
         }
     }
 
+    /// <summary>
+    /// Сравнивает строки между собой
+    /// </summary>
+    /// <param name="x">Первая строка</param>
+    /// <param name="y">Вторая строка</param>
+    /// <param name="operation">Знак операции</param>
+    /// <returns>Результат вычисления, логическое значение</returns>
     private object StringCalc(string x, string y, string operation)
     {
-        return null;
+        switch (operation)
+        {
+            case "+":
+                return x + y;
+            case "<>":
+                return x != y;
+            case "=":
+                return x == y;
+            case "<=":
+                return String.CompareOrdinal(x, y) <= 0;
+            case ">=":
+                return String.CompareOrdinal(x, y) >= 0;
+            case "<":
+                return String.CompareOrdinal(x, y) < 0;
+            case ">":
+                return String.CompareOrdinal(x, y) > 0;
+            default:
+                throw new Exception(string.Format("Операция {0} не применима к типу String", operation));
+        }
     }
 
     /// <summary>
@@ -335,6 +694,12 @@ public class Calculation
             return v.value.ToString();
 
         return operand;
+    }
+
+    private object CalcFunc(string func)
+    {
+        Console.WriteLine(func);
+        return func;
     }
 
     private string CalcFunc(string func_name, string _param)
