@@ -224,38 +224,45 @@ public class Environs
     public void AssignmentVar(string var_name, string operand_name)
     {
         Variable var = GetElementByName(var_name);
-        object result;
-        if (TryCalculate(operand_name, out result) && result != null)
+        switch (var.GetType().Name)
         {
-            switch (var.GetType().Name)
-            {
-                case "Boolean":
-                    if (result.GetType().Name != "Boolean")
-                        throw new Exception("Нельзя присвоить переменной типа boolean значени типа " + result.GetType().Name);
-                    ((Boolean)var).Value = (bool)result;
+            case "Boolean":
+                bool bresult;
+                if (bool.TryParse(operand_name, out bresult))
+                {
+                    ((Boolean)var).Value = bresult;
                     return;
-                case "Real":
-                    if (result.GetType().Name != "Double")
-                        throw new Exception("Нельзя присвоить переменной типа real значение типа " + result.GetType().Name);
-                    ((Real)var).Value = (double)result;
+                }
+                break;
+            case "Real":
+                double dresult;
+                if (double.TryParse(operand_name, out dresult))
+                {
+                    ((Real)var).Value = dresult;
                     return;
-                case "Integer":
-                    if (result.GetType().Name != "Double")
-                        throw new Exception("Нельзя присвоить переменной типа integer значение типа " + result.GetType().Name);
-                    if ((int)(double)result != (double)result)
-                        throw new Exception("Нельзя присвоить переменной типа integer значение типа real");
-                    ((Integer)var).Value = (int)(double)result;
+                }
+                break;
+            case "Integer":
+                int iresult;
+                if (int.TryParse(operand_name, out iresult))
+                {
+                    ((Integer)var).Value = iresult;
                     return;
-                default:
-                    throw new Exception("Нельзя присвоить переменной типа " + var.GetType().Name +
-                        " значение типа " + result.GetType().Name);
-            }
+                }
+                break;
+            case "Char":
+                if (operand_name.StartsWith("'") && operand_name.EndsWith("'") && operand_name.Length == 3)
+                {
+                    ((Char)var).Value = operand_name[1];
+                    return;
+                }
+                break;
         }
-        
+
         Variable operand = GetElementByName(operand_name);
 
         if (var.GetType().Name != operand.GetType().Name)
-            throw new Exception("Нельзя присвоить переменной с типом " + var.GetType().Name 
+            throw new Exception("Нельзя присвоить переменной с типом " + var.GetType().Name
                 + " значение переменной с типом " + operand.GetType().Name);
         if (var.pointer)
             if (operand.pointer)
@@ -294,6 +301,14 @@ public class Environs
                 var.value = result;
             else
                 throw new Exception("Нельзя присвоить переменной типа " + var.type + " значение типа " + result.GetType().Name);
+        }
+        else if (var.GetType().Name == "Char")
+        {
+            expression = expression.Trim();
+            if (expression.StartsWith("'") && expression.EndsWith("'") && expression.Length == 3)
+                ((Char)var).Value = expression[1];
+            else
+                throw new Exception("Нельзя присвоить переменной типа Char значение " + expression);
         }
         else
             throw new Exception("Нельзя присвоить переменной типа " + var.type + " значение типа " + result.GetType().Name);
@@ -400,8 +415,9 @@ public class Environs
             output = Calculate(expr);
             return true;
         }
-        catch
+        catch (Exception e)
         {
+            Console.WriteLine(e);
             return false;
         }
     }

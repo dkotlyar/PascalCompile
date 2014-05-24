@@ -87,6 +87,29 @@ public class Boolean : Variable
     }
 }
 
+public class Char : Variable
+{
+    public char Value
+    {
+        get { return (char)value; }
+        set { this.value = (char)value; }
+    }
+
+    public Char() {
+        type = "char";
+        value = '\0';
+        pointer = false;
+    }
+
+    public Char(string _name)
+    {
+        name = _name;
+        type = "char";
+        value = '\0';
+        pointer = false;
+    }
+}
+
 public class Real : Variable
 {
     public double Value

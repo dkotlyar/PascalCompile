@@ -91,11 +91,11 @@ public class ParseCode
             Match m;
             Constant constant = null;
             object _expr_value = null;
-            if ((m = Regexs.Match(ts.type, Regs.IsString)).Success)
+            /*if ((m = Regexs.Match(ts.type, Regs.IsString)).Success)
             {
                 constant = new Constant(ts.name, m.Groups["str"].Value);
             }
-            else if (env.TryCalculate(ts.type, out _expr_value) && _expr_value != null)
+            else */if (env.TryCalculate(ts.type, out _expr_value) && _expr_value != null)
             {
                 constant = new Constant(ts.name, _expr_value);
             }
@@ -255,6 +255,13 @@ public class ParseCode
                 if (name != "")
                     env.Add(b, name);
                 return b;
+            }
+            else if (type == "char")
+            {
+                Char c = new Char(name);
+                if (name != "")
+                    env.Add(c, name);
+                return c;
             }
             else
             {
