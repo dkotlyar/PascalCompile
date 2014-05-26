@@ -143,22 +143,27 @@ namespace PascalCompile
                             continue;
                         }
 
-                        List<Environs.EnvironsStuct> lst = e.GetTrashVariable();
+                        //List<Environs.EnvironsStuct> lst = e.GetTrashVariable();
 
-                        foreach (Environs.EnvironsStuct item in lst)
-                        {
-                            Console.WriteLine("{0}({1}) = {2};",
-                                item.name,
-                                item.value.GetType().Name,
-                                item.value.value);
-                        }
+                        //foreach (Environs.EnvironsStuct item in lst)
+                        //{
+                        //    Console.WriteLine("{0}({1}) = {2};",
+                        //        item.name,
+                        //        item.value.GetType().Name,
+                        //        item.value.value);
+                        //}
 
                         //Console.WriteLine();
                         //e.Dump();
-                        //Console.WriteLine();
                         //Console.WriteLine(code.Remove(0, cursor.start).Remove(cursor.end - cursor.start));
+                        //Console.WriteLine();
                     } while (cursor != null);
                 }
+                //catch (CompileException ce)
+                //{
+                //    Console.WriteLine(ce.Message);
+                //    Console.WriteLine("Строка " + ce.Row);
+                //}
                 catch (Exception e)
                 {
                     Console.WriteLine(e.Message);

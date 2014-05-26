@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Calculation.cs" />
+    <Compile Include="CompileException.cs" />
     <Compile Include="Environment.cs" />
     <Compile Include="ParseCode.cs" />
     <Compile Include="Program.cs" />

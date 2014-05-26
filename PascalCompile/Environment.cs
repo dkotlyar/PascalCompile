@@ -117,39 +117,6 @@ public class Environs
         }
 
         return var;
-
-        /*string[] names = name.Split('.');
-
-        if (names.Length == 0)
-            return new NullVariable();
-
-        Variable var = new NullVariable();
-        for (int i = 0; i < names.Length; i++)
-        {
-            bool pointer = names[i].EndsWith("^");
-            if (pointer) names[i] = names[i].Remove(names[i].Length - 1);
-
-            if (i == 0)
-            {
-                foreach (EnvironsStuct item in enviroment)
-                {
-                    if (item.name == names[i])
-                        var = item.value;
-                }
-            }
-            else
-            {
-                if (var.GetType().Name == "NullVariable")
-                    break;
-                else if (var.GetType().Name == "Record")
-                    var = ((Record)var).GetVariable(names[i]);
-            }
-
-            if (pointer)
-                var = ((Pointer)var).Value;
-        }
-
-        return var;*/
     }
 
     /// <summary>
@@ -167,9 +134,21 @@ public class Environs
         return new NullVariable();
     }
 
-    public void DeleteElementByName(string name)
+    /// <summary>
+    /// Удаляет переменную из памяти
+    /// </summary>
+    /// <param name="var">Переменная</param>
+    public void DeleteElement(Variable var)
     {
-
+        for (int i = 0; i < enviroment.Count; i++)
+            if (enviroment[i].value == var)
+            {
+                //if (enviroment[i].name == "DYNAMIC")
+                    enviroment.RemoveAt(i);
+                //else
+                //    throw new Exception("Нельзя удалить из памяти статическую переменную");
+                return;
+            }
     }
 
     /// <summary>
@@ -266,7 +245,7 @@ public class Environs
                 + " значение переменной с типом " + operand.GetType().Name);
         if (var.pointer)
             if (operand.pointer)
-                AssignmentLink(var_name, operand);
+                ((Pointer)var).Value = ((Pointer)operand).Value;
             else
                 throw new Exception("Нельзя присвоить значение переменной указателю");
         else
@@ -285,6 +264,9 @@ public class Environs
     {
         object result = Calculate(expression);
         Variable var = GetElementByName(var_name);
+
+        if (var == null || var.GetType().Name == "NullVariable")
+            throw new Exception("Неизвестная переменная " + var_name);
 
         if (result.GetType().Name == "Boolean" && var.GetType().Name == "Boolean")
             var.value = result;
@@ -334,62 +316,62 @@ public class Environs
         ((Pointer)pointer).Value = variable;
     }
 
-    /// <summary>
-    /// Связывает переменную указатель с новым адресом, на которую она должна ссылаться
-    /// </summary>
-    /// <param name="var_name">Имя указателя</param>
-    /// <param name="operand">Новы адрес</param>
-    public void AssignmentLink(string var_name, Variable operand)
-    {
-        string[] names = var_name.Split('.');
+    ///// <summary>
+    ///// Связывает переменную указатель с новым адресом, на которую она должна ссылаться
+    ///// </summary>
+    ///// <param name="var_name">Имя указателя</param>
+    ///// <param name="operand">Новы адрес</param>
+    //public void AssignmentLink(string var_name, Variable operand)
+    //{
+    //    string[] names = var_name.Split('.');
 
-        if (names.Length == 0)
-            return;
-        else if (names.Length == 1)
-        {
-            if (names[0].EndsWith("^"))
-                throw new Exception("Нельзя к разыменованной ссылке присвоить значение адреса");
-            else
-                for (int i = 0; i < enviroment.Count; i++)
-                    if (enviroment[i].name == names[0])
-                    {
-                        enviroment.RemoveAt(i);
-                        Add(operand, var_name);
-                    }
-        }
-        else
-        {
-            Variable var = new NullVariable();
-            for (int i = 0; i < names.Length - 1; i++)
-            {
-                bool pointer = names[i].EndsWith("^");
-                if (pointer) names[i] = names[i].Remove(names[i].Length - 1);
+    //    if (names.Length == 0)
+    //        return;
+    //    else if (names.Length == 1)
+    //    {
+    //        if (names[0].EndsWith("^"))
+    //            throw new Exception("Нельзя к разыменованной ссылке присвоить значение адреса");
+    //        else
+    //            for (int i = 0; i < enviroment.Count; i++)
+    //                if (enviroment[i].name == names[0])
+    //                {
+    //                    enviroment.RemoveAt(i);
+    //                    Add(operand, var_name);
+    //                }
+    //    }
+    //    else
+    //    {
+    //        Variable var = new NullVariable();
+    //        for (int i = 0; i < names.Length - 1; i++)
+    //        {
+    //            bool pointer = names[i].EndsWith("^");
+    //            if (pointer) names[i] = names[i].Remove(names[i].Length - 1);
 
-                if (i == 0)
-                {
-                    foreach (EnvironsStuct item in enviroment)
-                        if (item.name == names[i])
-                            var = item.value;
-                }
-                else
-                {
-                    if (var.GetType().Name == "NullVariable")
-                        break;
-                    else if (var.GetType().Name == "Record")
-                        var = ((Record)var).GetVariable(names[i]);
-                }
+    //            if (i == 0)
+    //            {
+    //                foreach (EnvironsStuct item in enviroment)
+    //                    if (item.name == names[i])
+    //                        var = item.value;
+    //            }
+    //            else
+    //            {
+    //                if (var.GetType().Name == "NullVariable")
+    //                    break;
+    //                else if (var.GetType().Name == "Record")
+    //                    var = ((Record)var).GetVariable(names[i]);
+    //            }
 
-                if (pointer)
-                    var = ((Pointer)var).Value;
-            }
+    //            if (pointer)
+    //                var = ((Pointer)var).Value;
+    //        }
 
-            if (names[names.Length - 1].EndsWith("^"))
-                throw new Exception("Нельзя к разыменованной ссылке присвоить значение адреса");
-            else
-                if (var.GetType().Name == "Record")
-                    ((Record)var).SetVariable(operand, names[names.Length - 1]);
-        }
-    }
+    //        if (names[names.Length - 1].EndsWith("^"))
+    //            throw new Exception("Нельзя к разыменованной ссылке присвоить значение адреса");
+    //        else
+    //            if (var.GetType().Name == "Record")
+    //                ((Record)var).SetVariable(operand, names[names.Length - 1]);
+    //    }
+    //}
 
     /// <summary>
     /// Производит математические вычисления над переданной строкой
@@ -417,7 +399,7 @@ public class Environs
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            //Console.WriteLine(e);
             return false;
         }
     }

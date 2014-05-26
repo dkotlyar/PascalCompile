@@ -69,7 +69,7 @@ public class Calculation
         int opn_bkt_s = 0, opn_bkt_r = 0;
         for (int i = 0; i < expression.Length; i++)
         {
-            if (!is_string)
+            if (!is_string && expression[i] != '\'')
             {
                 #region скобки массива
                 if (expression[i] == '[' && opn_bkt_s == 0)
@@ -95,13 +95,13 @@ public class Calculation
                     opn_bkt_s--;
                     str_stack += expression[i];
                 }
-                else if (is_ignore_s && expression[i] != '\'')
+                else if (is_ignore_s)
                 {
                     str_stack += expression[i];
                 }
                 #endregion
                 #region скобки функции
-                if (expression[i] == '(' && opn_bkt_r == 0 && str_stack.Length > 0 && char.IsLetter(str_stack[0]))
+                else if (expression[i] == '(' && opn_bkt_r == 0 && str_stack.Length > 0 && char.IsLetter(str_stack[0]))
                 {
                     is_func = true;
                     is_ignore_r = true;
@@ -125,7 +125,7 @@ public class Calculation
                     opn_bkt_r--;
                     str_stack += expression[i];
                 }
-                else if (is_ignore_r && expression[i] != '\'')
+                else if (is_ignore_r)
                 {
                     str_stack += expression[i];
                 }
@@ -202,6 +202,8 @@ public class Calculation
             ms.value = str_stack.Trim();
             if (str_stack.Length == 1 && splitters.Contains(str_stack[0]))
                 ms.type = 2;
+            else if (is_func)
+                ms.type = 3;
             else
                 ms.type = 1;
             operands.Enqueue(ms);
@@ -209,7 +211,7 @@ public class Calculation
         #endregion
 
         //foreach (Object obj in operands)
-        //    Console.WriteLine("'{0}' ", ((Calculation.MathStruct)obj).value, ((Calculation.MathStruct)obj).type);
+        //    Console.WriteLine("{0} :: {1}", ((Calculation.MathStruct)obj).value, ((Calculation.MathStruct)obj).type);
 
         #region Записываем ОПН в очередь
         Queue opn = new Queue();
@@ -696,10 +698,158 @@ public class Calculation
         return operand;
     }
 
+    /// <summary>
+    /// Вычисляет значение функции с параметрами
+    /// </summary>
+    /// <param name="func">Имя функции и параметры в формате Имя_Функции(Параметр[, Параметр])</param>
+    /// <returns>Значение функции</returns>
     private object CalcFunc(string func)
     {
-        Console.WriteLine(func);
-        return func;
+        func = func.Trim();
+        string func_name = func.Remove(func.IndexOf("("));
+        string _params = func.Remove(0, func.IndexOf("(")+1).Remove(func.Length - func.IndexOf("(") - 2);
+        int opn_s_bkt = 0, opn_r_bkt = 0;
+        bool is_string = false;
+        for (int i = 0; i < _params.Length; i++)
+        {
+            if (_params[i] == '\'')
+                is_string = !is_string;
+            else if (_params[i] == '(')
+                opn_r_bkt++;
+            else if (_params[i] == ')')
+                opn_r_bkt--;
+            else if (_params[i] == '[')
+                opn_s_bkt++;
+            else if (_params[i] == ']')
+                opn_s_bkt--;
+            else if (_params[i] == ',' && opn_r_bkt == 0 && opn_s_bkt == 0 && !is_string)
+                _params = _params.Insert(i++, "☺").Remove(i, 1);
+        }
+        string[] param_arr = _params.Split('☺');
+
+        if (param_arr.Length == 1)
+        {
+            object param = Calculate(param_arr[0]);
+
+            if (param.GetType().Name != "Double")
+                throw new Exception("Функция " + func_name + " не принимает параметр типа " + param.GetType().Name);
+
+            switch (func_name)
+            {
+                case "sign":
+                    return Math.Sign((double)param).ToString();
+                case "abs":
+                    return Math.Abs((double)param).ToString();
+                case "sin":
+                    return Math.Sin((double)param).ToString();
+                case "sinh":
+                    return Math.Sinh((double)param).ToString();
+                case "cos":
+                    return Math.Cos((double)param).ToString();
+                case "cosh":
+                    return Math.Cosh((double)param).ToString();
+                case "tan":
+                    return Math.Tan((double)param).ToString();
+                case "tanh":
+                    return Math.Tanh((double)param).ToString();
+                case "arcsin":
+                    return Math.Acos((double)param).ToString();
+                case "arccos":
+                    return Math.Asin((double)param).ToString();
+                case "arctan":
+                    return Math.Atan((double)param).ToString();
+                case "exp":
+                    return Math.Exp((double)param).ToString();
+                case "ln":
+                    return Math.Log((double)param, Math.E).ToString();
+                case "log2":
+                    return Math.Log((double)param, 2).ToString();
+                case "log10":
+                    return Math.Log10((double)param).ToString();
+                case "sqrt":
+                    return Math.Sqrt((double)param).ToString();
+                case "sqr":
+                    return ((double)param * (double)param).ToString();
+                case "round":
+                    return Math.Round((double)param).ToString();
+                case "trunc":
+                case "int":
+                    return Math.Truncate((double)param).ToString();
+                case "frac":
+                    return ((double)param - Math.Truncate((double)param)).ToString();
+                case "floor":
+                    return Math.Floor((double)param).ToString();
+                case "ceil":
+                    return Math.Ceiling((double)param).ToString();
+                case "radtodeg":
+                    return ((double)param / Math.PI * 180).ToString();
+                case "degtorad":
+                    return ((double)param / 180 * Math.PI).ToString();
+                case "random":
+                    return new Random().Next((int)(double)param).ToString();
+                case "logn":
+                case "power":
+                case "max":
+                case "min":
+                    throw new Exception("Функци " + func_name + " не принимает 1 параметр");
+                default:
+                    throw new Exception("Неизвестная функция " + func_name);
+            }
+        }
+        else if (param_arr.Length == 2)
+        {
+            object first_param = Calculate(param_arr[0]);
+            object second_param = Calculate(param_arr[1]);
+
+            if (first_param.GetType().Name != "Double")
+                throw new Exception("Функция " + func_name + " не принимает параметр типа " + first_param.GetType().Name);
+            if (second_param.GetType().Name != "Double")
+                throw new Exception("Функция " + func_name + " не принимает параметр типа " + second_param.GetType().Name);
+
+            switch (func_name)
+            {
+                case "logn":
+                    return Math.Log((double)first_param, (double)second_param);
+                case "power":
+                    return Math.Pow((double)first_param, (double)second_param);
+                case "random":
+                    return new Random().Next((int)(double)first_param, (int)(double)second_param);
+                case "max":
+                    return Math.Max((double)first_param, (double)second_param);
+                case "min":
+                    return Math.Min((double)first_param, (double)second_param);
+                case "sign":
+                case "abs":
+                case "sin":
+                case "sinh":
+                case "cos":
+                case "cosh":
+                case "tan":
+                case "tanh":
+                case "arcsin":
+                case "arccos":
+                case "arctan":
+                case "exp":
+                case "ln":
+                case "log2":
+                case "log10":
+                case "sqrt":
+                case "sqr":
+                case "round":
+                case "trunc":
+                case "int":
+                case "frac":
+                case "floor":
+                case "ceil":
+                case "radtodeg":
+                case "degtorad":
+                    throw new Exception("Функция " + func_name + " не принимает 2 параметра");
+                default:
+                    throw new Exception("Неизвестная функция " + func_name);
+            }
+        }
+
+        return 0;
     }
 
     private string CalcFunc(string func_name, string _param)
